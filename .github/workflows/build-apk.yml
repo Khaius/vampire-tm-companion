@@ -103,3 +103,34 @@ jobs:
         with:
           files: dist/*.apk
           generate_release_notes: true
+          body: |
+            Compagno da tavolo per **Vampire: The Masquerade**: schede
+            personaggio delle tre edizioni, tiro dei d10 e libreria di PDF.
+            Funziona tutto in locale sul telefono: niente account, niente
+            rete, i dati restano sul dispositivo.
+
+            ## Quale file scaricare
+
+            | File | Per chi |
+            |---|---|
+            | `vtm-companion-arm64.apk` | Praticamente tutti i telefoni degli ultimi anni. **Parti da questo.** |
+            | `vtm-companion-arm32.apk` | Telefoni più vecchi a 32 bit. |
+            | `vtm-companion.apk` | Universale: va su tutto, ma pesa il triplo. |
+
+            ## Come si installa
+
+            L'app non passa dal Play Store, quindi Android chiede una
+            conferma in più:
+
+            1. Apri l'APK scaricato.
+            2. Se dice che l'installazione non è consentita, il permesso va
+               dato **all'app da cui apri il file** (Chrome, Gestione file...):
+               Impostazioni → App → Accesso speciale alle app →
+               Installa app sconosciute.
+            3. Su Android 16, se viene rifiutata senza spiegazioni, controlla
+               che non sia attiva la *Protezione avanzata* in
+               Impostazioni → Sicurezza e privacy.
+
+            Se avevi installato una build di prova precedente al
+            5 agosto 2026, disinstallala prima: era firmata con un'altra
+            chiave e Android non la lascia sovrascrivere.
