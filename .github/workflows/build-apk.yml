@@ -48,18 +48,29 @@ jobs:
         run: flutter build apk --release
         timeout-minutes: 20
 
-      - name: Rinomina l'APK
+      # Un APK per architettura pesa un terzo di quello universale: si
+      # scarica prima e lascia meno spazio all'ipotesi del download
+      # incompleto, che sul telefono si manifesta come "app non installata".
+      - name: Compila gli APK per singola architettura
+        run: flutter build apk --release --split-per-abi
+        timeout-minutes: 20
+
+      - name: Prepara i file da pubblicare
         run: |
           mkdir -p dist
           cp build/app/outputs/flutter-apk/app-release.apk \
              dist/vtm-companion.apk
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
+             dist/vtm-companion-arm64.apk
+          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk \
+             dist/vtm-companion-arm32.apk
           ls -la dist
 
       - name: Pubblica l'APK come artifact
         uses: actions/upload-artifact@v4
         with:
           name: vtm-companion-apk
-          path: dist/vtm-companion.apk
+          path: dist/*.apk
           retention-days: 90
 
       # Release fissa "build-latest": dà un link diretto, comodo da aprire
@@ -73,14 +84,53 @@ jobs:
           body: |
             APK di sviluppo generato automaticamente dal commit ${{ github.sha }}.
 
-            Scarica `vtm-companion.apk` e installalo sul telefono
-            (serve autorizzare l'installazione da origini sconosciute).
+            Quale scaricare:
+
+            - `vtm-companion-arm64.apk` — praticamente tutti i telefoni degli
+              ultimi anni. E' il piu' leggero: prova prima questo.
+            - `vtm-companion-arm32.apk` — telefoni piu' vecchi a 32 bit.
+            - `vtm-companion.apk` — universale, va su tutto ma pesa il triplo.
+
+            Serve autorizzare l'installazione da origini sconosciute. Se sul
+            telefono c'e' gia' una versione installata da prima del
+            5 agosto 2026, disinstallala: era firmata con un'altra chiave.
           prerelease: true
-          files: dist/vtm-companion.apk
+          files: dist/*.apk
 
       - name: Release definitiva sui tag
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/vtm-companion.apk
+          files: dist/*.apk
           generate_release_notes: true
+          body: |
+            Compagno da tavolo per **Vampire: The Masquerade**: schede
+            personaggio delle tre edizioni, tiro dei d10 e libreria di PDF.
+            Funziona tutto in locale sul telefono: niente account, niente
+            rete, i dati restano sul dispositivo.
+
+            ## Quale file scaricare
+
+            | File | Per chi |
+            |---|---|
+            | `vtm-companion-arm64.apk` | Praticamente tutti i telefoni degli ultimi anni. **Parti da questo.** |
+            | `vtm-companion-arm32.apk` | Telefoni più vecchi a 32 bit. |
+            | `vtm-companion.apk` | Universale: va su tutto, ma pesa il triplo. |
+
+            ## Come si installa
+
+            L'app non passa dal Play Store, quindi Android chiede una
+            conferma in più:
+
+            1. Apri l'APK scaricato.
+            2. Se dice che l'installazione non è consentita, il permesso va
+               dato **all'app da cui apri il file** (Chrome, Gestione file...):
+               Impostazioni → App → Accesso speciale alle app →
+               Installa app sconosciute.
+            3. Su Android 16, se viene rifiutata senza spiegazioni, controlla
+               che non sia attiva la *Protezione avanzata* in
+               Impostazioni → Sicurezza e privacy.
+
+            Se avevi installato una build di prova precedente al
+            5 agosto 2026, disinstallala prima: era firmata con un'altra
+            chiave e Android non la lascia sovrascrivere.

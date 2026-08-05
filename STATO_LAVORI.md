@@ -111,6 +111,23 @@ Al workflow è comunque rimasta la parte utile: annulla la build precedente
 quando ne parte una nuova e ha un tetto di tempo, così un blocco vero
 fallisce presto invece di restare appeso.
 
+### Firma dell'APK (problema trovato dopo la consegna)
+
+I primi APK uscivano firmati con la chiave di **debug**, che AGP genera al
+volo quando non la trova. Ogni run parte da una macchina pulita, quindi ogni
+build aveva una firma diversa: Android rifiuta di installare un
+aggiornamento firmato in modo diverso da quello già installato, con il
+messaggio "app non installata".
+
+Rimedio: chiave stabile in `android/app/vtm-signing.jks`, versionata nel
+repository con la sua password, usata dalla `signingConfig` di release.
+Non protegge un segreto — serve solo a rendere le build sovrapponibili.
+Impronta SHA-256 del certificato:
+`50:86:AE:2F:51:A7:07:3A:E1:66:6F:92:C9:7D:30:99:F0:45:F7:BB:92:5E:21:56:E0:9A:48:54:FA:C4:19:4E`.
+
+**Chi ha installato un APK precedente deve disinstallarlo una volta sola**:
+da lì in avanti gli aggiornamenti si installano sopra senza perdere nulla.
+
 ### Come recuperare l'APK (anche da solo, senza di me)
 
 1. Vai su **Actions → Build APK** nel repository.
