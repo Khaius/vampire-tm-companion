@@ -10,9 +10,16 @@ on:
 permissions:
   contents: write
 
+# Un push nuovo annulla la build precedente ancora in corso.
+concurrency:
+  group: build-apk-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Se qualcosa si impianta si fallisce presto invece di restare appesi.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -39,6 +46,7 @@ jobs:
 
       - name: Compila l'APK di release
         run: flutter build apk --release
+        timeout-minutes: 20
 
       - name: Rinomina l'APK
         run: |

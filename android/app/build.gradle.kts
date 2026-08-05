@@ -7,7 +7,9 @@ plugins {
 android {
     namespace = "it.vtm.vtm_companion"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // Nessun ndkVersion: l'app non contiene codice nativo proprio e i
+    // plugin usati sono solo Kotlin/Java. Dichiararlo costringerebbe
+    // ogni build pulita a scaricare l'NDK (oltre un gigabyte).
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
