@@ -1,0 +1,6 @@
+tags:
+  golden:
+    # I golden confrontano pixel: si eseguono in locale, dove il rendering
+    # del testo e' quello di riferimento. In CI vengono esclusi perche' le
+    # versioni di FreeType/Skia dei runner producono differenze minime.
+    description: Confronto pixel delle schermate

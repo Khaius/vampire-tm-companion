@@ -1,0 +1,46 @@
+name: vtm_companion
+description: "Compagno da tavolo per Vampire: The Masquerade - schede, dadi e documenti, tutto in locale."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  provider: ^6.1.5
+  path_provider: ^2.1.5
+  path: ^1.9.1
+  uuid: ^4.6.0
+  file_selector: ^1.1.0
+  pdfx: ^2.9.2
+  flutter_svg: ^2.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/icons/
+
+  fonts:
+    - family: Cinzel
+      fonts:
+        - asset: assets/fonts/Cinzel-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Cinzel-Bold.ttf
+          weight: 700
+    - family: EBGaramond
+      fonts:
+        - asset: assets/fonts/EBGaramond-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/EBGaramond-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/EBGaramond-Italic.ttf
+          weight: 400
+          style: italic
