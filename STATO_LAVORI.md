@@ -95,13 +95,21 @@ dei pallini allineate, colori dei dadi.
 
 **Verificare l'esito della build su GitHub Actions e recuperare l'APK.**
 
-Al momento della pausa la run era *in corso*:
+Il codice dell'app non è mai stato in discussione: analisi, test e golden
+sono verdi anche in CI. I problemi sono stati tutti nel *toolchain Android*,
+e sono stati diagnosticati leggendo i log e corretti uno per uno.
 
-- Run: https://github.com/Khaius/vampire-tm-companion/actions/runs/30989999964
-- Step completati: checkout, setup Java; in corso: installazione Flutter.
-- Step successivi: `flutter pub get` → `analyze` → `test --exclude-tags
-  golden` → `build apk --release` → upload artifact → release
-  `build-latest`.
+### Diario della compilazione
+
+| Run | Esito | Causa e rimedio |
+|---|---|---|
+| 1 e 2 | rosse | `compileReleaseJavaWithJavac`: il registrant non trovava `FilePickerPlugin`. Il template di Flutter 3.44 parte con **AGP 9 / Gradle 9**, mentre i plugin sono costruiti sulla linea AGP 8 (pdfx dichiara 8.5.2, file_selector_android 8.13.1): sotto AGP 9 la compilazione Kotlin dei loro moduli non produce classi. Rimedio: AGP 8.13.1, Gradle 8.14, Kotlin 2.3.20 — tutti sopra le soglie richieste da Flutter (AGP ≥ 8.6, Gradle ≥ 8.7, KGP ≥ 2.0). In più `file_picker` è stato sostituito con `file_selector`, mantenuto dal team Flutter. |
+| 3 | **verde** | Ha prodotto l'APK alle 08:57. Attenzione: le API di GitHub sui job restituiscono stato in cache e per un pezzo hanno continuato a dire "in corso", facendomi credere che fosse bloccata. Il segnale affidabile è la release, non lo stato del job. |
+| 4 | annullata | Conteneva modifiche a NDK e memoria di Gradle nate da quella diagnosi sbagliata. Sono state riportate indietro: la configurazione di build è di nuovo esattamente quella della run 3. |
+
+Al workflow è comunque rimasta la parte utile: annulla la build precedente
+quando ne parte una nuova e ha un tetto di tempo, così un blocco vero
+fallisce presto invece di restare appeso.
 
 ### Come recuperare l'APK (anche da solo, senza di me)
 
@@ -112,21 +120,18 @@ Al momento della pausa la run era *in corso*:
 3. Sul telefono, autorizza l'installazione da origini sconosciute
    (l'APK è firmato con la chiave di debug).
 
-### Se la build fosse rossa
+### Se la build fosse ancora rossa
 
-I punti dove è più probabile che si rompa, in ordine:
-
-1. **`pdfx` e Gradle**: è l'unica dipendenza con codice nativo. Se fallisce
-   la compilazione Android, l'alternativa più semplice è sostituirla con
-   `flutter_pdfview` in `lib/ui/documents/pdf_reader_page.dart` (l'unico
-   file che la usa) e in `pubspec.yaml`.
-2. **`minSdk`**: `pdfx` richiede API 21+. Se si lamenta, imposta
-   `minSdk = 21` in `android/app/build.gradle.kts`.
-3. **Permesso di scrittura della release**: il workflow ha già
-   `permissions: contents: write`; se l'organizzazione lo blocca, resta
-   comunque l'artifact scaricabile dalla run.
-
-I log si leggono da **Actions → la run → job `build`**.
+1. Leggi il log da **Actions → la run → job `build`**: l'errore vero è nelle
+   ultime righe dello step "Compila l'APK di release".
+2. Se il problema resta su `pdfx` (l'unico plugin non ufficiale rimasto),
+   si sostituisce con `flutter_pdfview` toccando due file soli:
+   `lib/ui/documents/pdf_reader_page.dart` e `pubspec.yaml`.
+3. Se si lamenta del `minSdk`, imposta `minSdk = 24` esplicitamente in
+   `android/app/build.gradle.kts`.
+4. Se la release `build-latest` non viene creata ma l'APK è compilato, è un
+   problema di permessi del repository: l'artifact della run resta comunque
+   scaricabile.
 
 ---
 
