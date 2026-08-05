@@ -20,7 +20,8 @@ class DicePage extends StatefulWidget {
   State<DicePage> createState() => _DicePageState();
 }
 
-class _DicePageState extends State<DicePage> with SingleTickerProviderStateMixin {
+class _DicePageState extends State<DicePage>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _shake = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 620),
@@ -102,10 +103,7 @@ class _DicePageState extends State<DicePage> with SingleTickerProviderStateMixin
                 ),
               ),
             ),
-          _PoolCounter(
-            value: state.dicePool,
-            onChanged: state.setDicePool,
-          ),
+          _PoolCounter(value: state.dicePool, onChanged: state.setDicePool),
           const SizedBox(height: 18),
           _DifficultyPicker(
             value: state.difficulty,
@@ -182,11 +180,7 @@ class _AnimatedDie extends StatelessWidget {
         child: Stack(
           alignment: Alignment.center,
           children: [
-            SvgPicture.asset(
-              VtmIcons.d10Large,
-              width: size,
-              height: size,
-            ),
+            SvgPicture.asset(VtmIcons.d10Large, width: size, height: size),
             if (total != null)
               Padding(
                 // il numero va sulla faccia frontale, non al centro geometrico
@@ -444,45 +438,48 @@ class _ResultPanel extends StatelessWidget {
           FittedBox(
             fit: BoxFit.scaleDown,
             child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              _Tally(
-                label: 'Successi',
-                value: '${roll.successes}',
-                color: VtmColors.success,
-              ),
-              const SizedBox(width: 8),
-              const Text('−', style: TextStyle(fontSize: 22, color: VtmColors.ink)),
-              const SizedBox(width: 8),
-              _Tally(
-                label: 'Uno',
-                value: '${roll.ones}',
-                color: VtmColors.failure,
-              ),
-              const SizedBox(width: 14),
-              Container(width: 1, height: 42, color: const Color(0xFFB6ADA1)),
-              const SizedBox(width: 14),
-              Column(
-                children: [
-                  const Text('TOTALE', style: SheetTextStyles.small),
-                  Text(
-                    total > 0 ? '+$total' : '$total',
-                    style: TextStyle(
-                      fontFamily: 'Cinzel',
-                      fontSize: 32,
-                      fontWeight: FontWeight.w700,
-                      height: 1.1,
-                      color: total > 0
-                          ? VtmColors.success
-                          : total < 0
-                          ? VtmColors.failure
-                          : VtmColors.neutralInk,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                _Tally(
+                  label: 'Successi',
+                  value: '${roll.successes}',
+                  color: VtmColors.success,
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  '−',
+                  style: TextStyle(fontSize: 22, color: VtmColors.ink),
+                ),
+                const SizedBox(width: 8),
+                _Tally(
+                  label: 'Uno',
+                  value: '${roll.ones}',
+                  color: VtmColors.failure,
+                ),
+                const SizedBox(width: 14),
+                Container(width: 1, height: 42, color: const Color(0xFFB6ADA1)),
+                const SizedBox(width: 14),
+                Column(
+                  children: [
+                    const Text('TOTALE', style: SheetTextStyles.small),
+                    Text(
+                      total > 0 ? '+$total' : '$total',
+                      style: TextStyle(
+                        fontFamily: 'Cinzel',
+                        fontSize: 32,
+                        fontWeight: FontWeight.w700,
+                        height: 1.1,
+                        color: total > 0
+                            ? VtmColors.success
+                            : total < 0
+                            ? VtmColors.failure
+                            : VtmColors.neutralInk,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
             ),
           ),
         ],

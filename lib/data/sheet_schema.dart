@@ -8,6 +8,7 @@ class FieldDef {
     this.multiline = false,
     this.hint,
     this.suggestions = const [],
+    this.options = const [],
   });
   final String key;
   final String label;
@@ -15,8 +16,15 @@ class FieldDef {
   final String? hint;
 
   /// Valori proposti in autocompletamento (clan, predatori...), presi dai
-  /// menu a tendina delle schede ufficiali.
+  /// menu a tendina delle schede ufficiali. Restano campi liberi: si puo'
+  /// scrivere qualsiasi cosa.
   final List<String> suggestions;
+
+  /// Valori di una scelta chiusa: il campo diventa un menu a tendina e non
+  /// si scrive a mano (la Generazione, in numeri romani).
+  final List<String> options;
+
+  bool get isSelect => options.isNotEmpty;
 }
 
 /// Un tratto a pallini con nome fisso (Forza, Atletica, Coraggio...).
@@ -59,6 +67,7 @@ class ListSection {
     this.slots = 5,
     this.hasDots = false,
     this.dotMax = 5,
+    this.limitedByGeneration = false,
     this.columns = const [],
     this.lineSlots = 0,
     this.suggestions = const [],
@@ -74,6 +83,12 @@ class ListSection {
 
   final bool hasDots;
   final int dotMax;
+
+  /// Se vero i pallini di questa sezione sottostanno al massimo imposto
+  /// dalla generazione: vale per Discipline, Background, Vie e Altre
+  /// Caratteristiche, non per pregi, difetti e rifugio.
+  final bool limitedByGeneration;
+
   final List<ColumnDef> columns;
 
   /// Righe libere sotto ogni voce (i poteri delle Discipline su V5).

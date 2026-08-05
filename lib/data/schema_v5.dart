@@ -1,4 +1,5 @@
 import '../models/sheet_type.dart';
+import 'generations.dart';
 import 'sheet_schema.dart';
 
 /// Clan disponibili nel menu a tendina della scheda Camarilla Italia.
@@ -151,7 +152,7 @@ const v5Schema = SheetSchema(
     FieldDef('clan', 'Clan', suggestions: _v5Clans),
     FieldDef('concept', 'Concetto'),
     FieldDef('desire', 'Desiderio'),
-    FieldDef('generation', 'Generazione'),
+    FieldDef('generation', 'Generazione', options: generationRomanOptions),
     FieldDef('chronicle', 'Cronaca'),
     FieldDef('predator', 'Predatore', suggestions: _v5Predators),
     FieldDef('sire', 'Sire'),
@@ -177,48 +178,84 @@ const v5Schema = SheetSchema(
   abilities: [
     TraitGroup('fisiche', 'Fisiche', [
       TraitDef('sk.atletica', 'Atletica', specialtyKey: 'spec.sk.atletica'),
-      TraitDef('sk.criminalita', 'Criminalità',
-          specialtyKey: 'spec.sk.criminalita'),
+      TraitDef(
+        'sk.criminalita',
+        'Criminalità',
+        specialtyKey: 'spec.sk.criminalita',
+      ),
       TraitDef('sk.manualita', 'Manualità', specialtyKey: 'spec.sk.manualita'),
       TraitDef('sk.guidare', 'Guidare', specialtyKey: 'spec.sk.guidare'),
-      TraitDef('sk.armidafuoco', 'Armi da Fuoco',
-          specialtyKey: 'spec.sk.armidafuoco'),
+      TraitDef(
+        'sk.armidafuoco',
+        'Armi da Fuoco',
+        specialtyKey: 'spec.sk.armidafuoco',
+      ),
       TraitDef('sk.rissa', 'Rissa', specialtyKey: 'spec.sk.rissa'),
       TraitDef('sk.mischia', 'Mischia', specialtyKey: 'spec.sk.mischia'),
       TraitDef('sk.furtivita', 'Furtività', specialtyKey: 'spec.sk.furtivita'),
-      TraitDef('sk.sopravvivenza', 'Sopravvivenza',
-          specialtyKey: 'spec.sk.sopravvivenza'),
+      TraitDef(
+        'sk.sopravvivenza',
+        'Sopravvivenza',
+        specialtyKey: 'spec.sk.sopravvivenza',
+      ),
     ]),
     TraitGroup('sociali_sk', 'Sociali', [
-      TraitDef('sk.affinitaanimale', 'Affinità Animale',
-          specialtyKey: 'spec.sk.affinitaanimale'),
+      TraitDef(
+        'sk.affinitaanimale',
+        'Affinità Animale',
+        specialtyKey: 'spec.sk.affinitaanimale',
+      ),
       TraitDef('sk.galateo', 'Galateo', specialtyKey: 'spec.sk.galateo'),
       TraitDef('sk.intuito', 'Intuito', specialtyKey: 'spec.sk.intuito'),
-      TraitDef('sk.intimidire', 'Intimidire',
-          specialtyKey: 'spec.sk.intimidire'),
+      TraitDef(
+        'sk.intimidire',
+        'Intimidire',
+        specialtyKey: 'spec.sk.intimidire',
+      ),
       TraitDef('sk.autorita', 'Autorità', specialtyKey: 'spec.sk.autorita'),
-      TraitDef('sk.espressivita', 'Espressività',
-          specialtyKey: 'spec.sk.espressivita'),
-      TraitDef('sk.convincere', 'Convincere',
-          specialtyKey: 'spec.sk.convincere'),
-      TraitDef('sk.bassifondi', 'Bassifondi',
-          specialtyKey: 'spec.sk.bassifondi'),
-      TraitDef('sk.sotterfugio', 'Sotterfugio',
-          specialtyKey: 'spec.sk.sotterfugio'),
+      TraitDef(
+        'sk.espressivita',
+        'Espressività',
+        specialtyKey: 'spec.sk.espressivita',
+      ),
+      TraitDef(
+        'sk.convincere',
+        'Convincere',
+        specialtyKey: 'spec.sk.convincere',
+      ),
+      TraitDef(
+        'sk.bassifondi',
+        'Bassifondi',
+        specialtyKey: 'spec.sk.bassifondi',
+      ),
+      TraitDef(
+        'sk.sotterfugio',
+        'Sotterfugio',
+        specialtyKey: 'spec.sk.sotterfugio',
+      ),
     ]),
     TraitGroup('mentali_sk', 'Mentali', [
-      TraitDef('sk.accademiche', 'Accademiche',
-          specialtyKey: 'spec.sk.accademiche'),
+      TraitDef(
+        'sk.accademiche',
+        'Accademiche',
+        specialtyKey: 'spec.sk.accademiche',
+      ),
       TraitDef('sk.allerta', 'Allerta', specialtyKey: 'spec.sk.allerta'),
       TraitDef('sk.finanza', 'Finanza', specialtyKey: 'spec.sk.finanza'),
-      TraitDef('sk.investigazione', 'Investigazione',
-          specialtyKey: 'spec.sk.investigazione'),
+      TraitDef(
+        'sk.investigazione',
+        'Investigazione',
+        specialtyKey: 'spec.sk.investigazione',
+      ),
       TraitDef('sk.medicina', 'Medicina', specialtyKey: 'spec.sk.medicina'),
       TraitDef('sk.occulto', 'Occulto', specialtyKey: 'spec.sk.occulto'),
       TraitDef('sk.politica', 'Politica', specialtyKey: 'spec.sk.politica'),
       TraitDef('sk.scienza', 'Scienza', specialtyKey: 'spec.sk.scienza'),
-      TraitDef('sk.tecnologia', 'Tecnologia',
-          specialtyKey: 'spec.sk.tecnologia'),
+      TraitDef(
+        'sk.tecnologia',
+        'Tecnologia',
+        specialtyKey: 'spec.sk.tecnologia',
+      ),
     ]),
   ],
   lists: [
@@ -227,6 +264,7 @@ const v5Schema = SheetSchema(
       title: 'Discipline',
       slots: 6,
       hasDots: true,
+      limitedByGeneration: true,
       lineSlots: 5,
       suggestions: _v5Disciplines,
       hint: 'Sotto ogni Disciplina puoi elencare i poteri conosciuti.',
@@ -236,6 +274,7 @@ const v5Schema = SheetSchema(
       title: 'Background',
       slots: 9,
       hasDots: true,
+      limitedByGeneration: true,
       suggestions: _v5Backgrounds,
     ),
     ListSection(
@@ -308,11 +347,7 @@ const v5Schema = SheetSchema(
   textSections: [
     TextSection('setta', 'Setta', lines: 1),
     TextSection('coterie', 'Coterie', lines: 4),
-    TextSection(
-      'convinzioni',
-      'Punti di Riferimento e Convinzioni',
-      lines: 6,
-    ),
+    TextSection('convinzioni', 'Punti di Riferimento e Convinzioni', lines: 6),
     TextSection('debolezza_clan', 'Debolezza di Clan', lines: 5),
     TextSection(
       'sangue',
@@ -355,10 +390,7 @@ const v5Schema = SheetSchema(
     TextSection(
       'esperienza',
       'Esperienza',
-      fields: [
-        FieldDef('xp_totale', 'Totale'),
-        FieldDef('xp_spesa', 'Spesa'),
-      ],
+      fields: [FieldDef('xp_totale', 'Totale'), FieldDef('xp_spesa', 'Spesa')],
     ),
     TextSection('proprieta', 'Proprietà', lines: 6),
     TextSection('note', 'Note', lines: 6),

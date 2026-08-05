@@ -32,7 +32,40 @@ oltre il 5 delle generazioni basse.
 
 Clan, predatori, discipline, background, meriti e difetti proposti in
 autocompletamento sono estratti dai menu a tendina delle schede ufficiali.
-Restano campi liberi: si può scrivere qualsiasi cosa.
+Restano campi liberi: si può scrivere qualsiasi cosa. L'unica eccezione è la
+**Generazione**, che si sceglie da un menu in numeri romani (II–XV).
+
+### Il limite imposto dalla generazione
+
+Scelta la generazione, i pallini che il personaggio non può raggiungere
+vengono disegnati sbarrati e non rispondono al tocco. Vale per Attributi,
+Abilità, Discipline, Background, Vie e Altre Caratteristiche; **non** per
+Umanità/Sentiero e Volontà, che restano fuori dal limite. Anche la riserva
+di Punti Sangue si spegne oltre il massimo consentito.
+
+| Generazione | Max tratti | Sangue | Per turno |
+|---|---|---|---|
+| III | 10 | 50 | 10 |
+| IV | 9 | 50 | 10 |
+| V | 8 | 40 | 8 |
+| VI | 7 | 30 | 6 |
+| VII | 6 | 20 | 5 |
+| VIII | 5 | 15 | 3 |
+| IX | 5 | 14 | 2 |
+| X | 5 | 13 | 1 |
+| XI | 5 | 12 | 1 |
+| XII | 5 | 11 | 1 |
+| XIII–XV | 5 | 10 | 1 |
+
+Le tabelle pubblicate partono dalla terza generazione: alla seconda sono
+stati dati gli stessi valori, perché è più materia da narratore che da
+regolamento. Il limite si applica solo dove la scheda stampa più pallini di
+quanti la generazione ne conceda, quindi si vede soprattutto sulla scheda
+dei Secoli Bui, che ne stampa nove.
+
+Se una scheda ha già un valore oltre il limite (per esempio cambiando
+generazione a personaggio fatto), quel pallino resta pieno ma smorzato: il
+dato non viene cancellato di nascosto, viene segnalato.
 
 ## Come si usa
 
@@ -43,6 +76,11 @@ disegnata come l'originale cartaceo — ed è viva: i pallini, le caselle di
 salute, volontà e sangue si toccano e cambiano subito, le righe si toccano
 per scrivere. Toccando il **nome di un tratto** si passa ai dadi con la
 riserva già impostata su quel valore.
+
+La scheda si apre **bloccata**: si può sfogliare senza il rischio di
+cambiarla per sbaglio mentre si scorre. Il lucchetto in alto (o la banda
+sopra la scheda) sblocca le modifiche, e resta sbloccata finché la si tiene
+aperta. Il tiro rapido dai tratti funziona anche da bloccata.
 
 Una scheda aperta resta la scheda corrente: tornando sull'icona del papiro
 da qualsiasi punto dell'app si riapre quella, finché non la si chiude a mano

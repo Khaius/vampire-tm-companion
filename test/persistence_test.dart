@@ -24,12 +24,10 @@ void main() {
     character.texts['name'] = 'Ysabeau di Aquitania';
     character.texts['clan'] = 'Toreador';
     character.dots['attr.forza'] = 7;
-    character.list('discipline').add(
-      TraitEntry(name: 'Ascendente', value: 4),
-    );
-    character.list('armi').add(
-      TraitEntry(name: 'Spada lunga', fields: {'danno': 'Forza+2'}),
-    );
+    character.list('discipline').add(TraitEntry(name: 'Ascendente', value: 4));
+    character
+        .list('armi')
+        .add(TraitEntry(name: 'Spada lunga', fields: {'danno': 'Forza+2'}));
     character.track('sangue', 50)[3] = 1;
 
     await repository.save(character);
@@ -94,29 +92,32 @@ void main() {
     expect(state.selectedCharacterId, isNull);
   });
 
-  test('i documenti importati vengono copiati nella cartella dell\'app', () async {
-    final source = File('${temp.path}/manuale.pdf');
-    await source.writeAsBytes(List<int>.filled(2048, 37));
+  test(
+    'i documenti importati vengono copiati nella cartella dell\'app',
+    () async {
+      final source = File('${temp.path}/manuale.pdf');
+      await source.writeAsBytes(List<int>.filled(2048, 37));
 
-    final repository = DocumentRepository(overrideDir: temp);
-    final doc = await repository.import(
-      sourcePath: source.path,
-      id: 'doc1',
-      title: 'Manuale Base',
-    );
+      final repository = DocumentRepository(overrideDir: temp);
+      final doc = await repository.import(
+        sourcePath: source.path,
+        id: 'doc1',
+        title: 'Manuale Base',
+      );
 
-    expect(doc.title, 'Manuale Base');
-    expect(doc.sizeBytes, 2048);
-    expect(await File(await repository.pathOf(doc)).exists(), isTrue);
-    expect((await repository.loadAll()).single.id, 'doc1');
+      expect(doc.title, 'Manuale Base');
+      expect(doc.sizeBytes, 2048);
+      expect(await File(await repository.pathOf(doc)).exists(), isTrue);
+      expect((await repository.loadAll()).single.id, 'doc1');
 
-    // il PDF resta leggibile anche se l'originale sparisce
-    await source.delete();
-    expect(await File(await repository.pathOf(doc)).exists(), isTrue);
+      // il PDF resta leggibile anche se l'originale sparisce
+      await source.delete();
+      expect(await File(await repository.pathOf(doc)).exists(), isTrue);
 
-    await repository.delete(doc);
-    expect(await repository.loadAll(), isEmpty);
-  });
+      await repository.delete(doc);
+      expect(await repository.loadAll(), isEmpty);
+    },
+  );
 
   test('la coda dei dadi tiene lo storico della sessione', () async {
     final state = AppState(

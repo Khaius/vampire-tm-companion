@@ -199,7 +199,10 @@ void main() {
       of: find.text('Forza'),
       matching: find.byType(Row),
     );
-    final dots = find.descendant(of: forza.first, matching: find.byType(InkWell));
+    final dots = find.descendant(
+      of: forza.first,
+      matching: find.byType(InkWell),
+    );
     expect(dots, findsWidgets);
 
     expect(character.dot('attr.forza'), 0);

@@ -48,7 +48,9 @@ class _DocumentsPageState extends State<DocumentsPage> {
 
       await context.read<AppState>().importDocument(
         sourcePath: path,
-        title: (title == null || title.trim().isEmpty) ? suggested : title.trim(),
+        title: (title == null || title.trim().isEmpty)
+            ? suggested
+            : title.trim(),
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

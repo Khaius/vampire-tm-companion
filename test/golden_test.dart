@@ -18,7 +18,10 @@ import 'package:vtm_companion/models/sheet_type.dart';
 /// Carica i font veri dell'app: senza, i golden mostrerebbero rettangoli.
 Future<void> _loadFonts() async {
   const fonts = {
-    'Cinzel': ['assets/fonts/Cinzel-Regular.ttf', 'assets/fonts/Cinzel-Bold.ttf'],
+    'Cinzel': [
+      'assets/fonts/Cinzel-Regular.ttf',
+      'assets/fonts/Cinzel-Bold.ttf',
+    ],
     'EBGaramond': [
       'assets/fonts/EBGaramond-Regular.ttf',
       'assets/fonts/EBGaramond-SemiBold.ttf',
@@ -42,9 +45,7 @@ Future<void> _loadFonts() async {
     );
     if (iconFont.existsSync()) {
       final loader = FontLoader('MaterialIcons')
-        ..addFont(
-          iconFont.readAsBytes().then((b) => ByteData.view(b.buffer)),
-        );
+        ..addFont(iconFont.readAsBytes().then((b) => ByteData.view(b.buffer)));
       await loader.load();
     }
   }
@@ -78,7 +79,7 @@ void main() {
       'player': 'Cristiano',
       'chronicle': 'Roma di Notte',
       'clan': 'Toreador',
-      'generation': '10ª',
+      'generation': 'XIII',
       'nature': 'Artista',
       'demeanor': 'Seduttrice',
       'concept': 'Gallerista',
@@ -134,7 +135,10 @@ void main() {
   testWidgets('lista schede', (tester) async {
     seedV20();
     final darkAges = state.createCharacter(SheetType.darkAges);
-    darkAges.texts.addAll({'name': 'Ysabeau d\'Aquitania', 'clan': 'Cappadoci'});
+    darkAges.texts.addAll({
+      'name': 'Ysabeau d\'Aquitania',
+      'clan': 'Cappadoci',
+    });
     final v5 = state.createCharacter(SheetType.v5);
     v5.texts.addAll({'name': 'Dante Ferrara', 'clan': 'Brujah'});
 
@@ -164,6 +168,14 @@ void main() {
     await expectLater(
       find.byType(MaterialApp),
       matchesGoldenFile('goldens/03_scheda_v20_testa.png'),
+    );
+
+    // stessa testata a modifiche sbloccate
+    await tester.tap(find.byIcon(Icons.lock_outline).last);
+    await tester.pumpAndSettle();
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('goldens/12_scheda_sbloccata.png'),
     );
 
     await tester.drag(find.byType(ListView).first, const Offset(0, -620));
@@ -228,7 +240,7 @@ void main() {
     character.texts.addAll({
       'name': 'Ysabeau d\'Aquitania',
       'clan': 'Cappadoci',
-      'generation': '8ª',
+      'generation': 'V',
       'concept': 'Monaca erudita',
       'chronicle': 'Le Notti di Provenza',
     });

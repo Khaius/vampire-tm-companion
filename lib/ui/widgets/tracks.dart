@@ -126,6 +126,7 @@ class BoxTrack extends StatelessWidget {
     this.color = VtmColors.ink,
     this.filledFirst = false,
     this.alignment = WrapAlignment.center,
+    this.allowed,
   });
 
   final List<int> states;
@@ -137,8 +138,13 @@ class BoxTrack extends StatelessWidget {
   final bool filledFirst;
   final WrapAlignment alignment;
 
+  /// Quante caselle sono davvero utilizzabili: le altre restano stampate ma
+  /// spente. Sulla riserva di sangue dipende dalla generazione.
+  final int? allowed;
+
   @override
   Widget build(BuildContext context) {
+    final usable = (allowed ?? states.length).clamp(0, states.length);
     final rows = <Widget>[];
     for (var start = 0; start < states.length; start += perRow) {
       final end = (start + perRow).clamp(0, states.length);
@@ -152,9 +158,9 @@ class BoxTrack extends StatelessWidget {
                 state: states[i],
                 maxState: maxState,
                 size: boxSize,
-                color: color,
+                color: i < usable ? color : color.withValues(alpha: 0.28),
                 filledFirst: filledFirst,
-                onChanged: onChanged == null
+                onChanged: (onChanged == null || i >= usable)
                     ? null
                     : (value) => onChanged!(i, value),
               ),
