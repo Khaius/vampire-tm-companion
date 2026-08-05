@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/app_state.dart';
 import '../../core/theme.dart';
+import '../../data/generations.dart';
 import '../../data/schemas.dart';
 import '../../models/character.dart';
 import '../../models/sheet_type.dart';
@@ -35,6 +36,11 @@ class _SheetPageState extends State<SheetPage> {
   Character? _character;
   late SheetSchema _schema;
 
+  /// La scheda si apre bloccata: sfogliarla non deve poterla cambiare per
+  /// sbaglio. Si sblocca dal lucchetto in alto e resta sbloccata finche'
+  /// la si tiene aperta.
+  bool _locked = true;
+
   @override
   void initState() {
     super.initState();
@@ -44,6 +50,14 @@ class _SheetPageState extends State<SheetPage> {
       _schema = schemaFor(character.type);
     }
   }
+
+  /// La generazione scelta sulla scheda, se riconoscibile.
+  GenerationRule? get _generation =>
+      generationFromText(_character?.text('generation'));
+
+  /// Massimo utilizzabile per un tratto: il minore fra i pallini stampati
+  /// sulla scheda e quelli concessi dalla generazione.
+  int _allowedFor(int sheetMax) => effectiveTraitMax(sheetMax, _generation);
 
   void _save() {
     final character = _character;
@@ -65,14 +79,22 @@ class _SheetPageState extends State<SheetPage> {
     String key,
     String title, {
     bool multiline = false,
+    List<String> options = const [],
   }) async {
     final character = _character!;
-    final result = await promptForText(
-      context,
-      title: title,
-      initial: character.text(key),
-      multiline: multiline,
-    );
+    final result = options.isNotEmpty
+        ? await promptForChoice(
+            context,
+            title: title,
+            initial: character.text(key),
+            options: options,
+          )
+        : await promptForText(
+            context,
+            title: title,
+            initial: character.text(key),
+            multiline: multiline,
+          );
     if (result == null) return;
     setState(() => character.texts[key] = result);
     _save();
@@ -98,6 +120,14 @@ class _SheetPageState extends State<SheetPage> {
           overflow: TextOverflow.ellipsis,
         ),
         actions: [
+          IconButton(
+            tooltip: _locked
+                ? 'Scheda bloccata: tocca per poterla modificare'
+                : 'Scheda modificabile: tocca per bloccarla',
+            icon: Icon(_locked ? Icons.lock_outline : Icons.lock_open),
+            color: _locked ? VtmColors.ash : VtmColors.bloodBright,
+            onPressed: () => setState(() => _locked = !_locked),
+          ),
           IconButton(
             tooltip: 'Modifica dati',
             icon: const Icon(Icons.edit_note),
@@ -129,6 +159,11 @@ class _SheetPageState extends State<SheetPage> {
             return ListView(
               padding: const EdgeInsets.fromLTRB(10, 10, 10, 26),
               children: [
+                _LockBanner(
+                  locked: _locked,
+                  onToggle: () => setState(() => _locked = !_locked),
+                ),
+                const SizedBox(height: 10),
                 SheetPaper(
                   type: type,
                   child: Column(
@@ -136,14 +171,18 @@ class _SheetPageState extends State<SheetPage> {
                     children: _buildSheet(character, type, wide),
                   ),
                 ),
-                const Padding(
-                  padding: EdgeInsets.only(top: 14),
+                Padding(
+                  padding: const EdgeInsets.only(top: 14),
                   child: Text(
-                    'Tocca i pallini e le caselle per aggiornarli, tocca una '
-                    'riga per scrivere, tocca il nome di un tratto per tirare '
-                    'i dadi.',
+                    _locked
+                        ? 'Scheda bloccata: puoi sfogliarla senza rischiare di '
+                              'cambiarla. Tocca il nome di un tratto per tirare '
+                              'i dadi.'
+                        : 'Tocca i pallini e le caselle per aggiornarli, tocca '
+                              'una riga per scrivere, tocca il nome di un tratto '
+                              'per tirare i dadi.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: VtmColors.ash, fontSize: 13),
+                    style: const TextStyle(color: VtmColors.ash, fontSize: 13),
                   ),
                 ),
               ],
@@ -163,10 +202,7 @@ class _SheetPageState extends State<SheetPage> {
       _identityBlock(character, wide),
       SheetBanner('Attributi', type: type),
       _traitColumns(character, _schema.attributes, wide, _schema.traitMax),
-      SheetBanner(
-        type == SheetType.v5 ? 'Skills' : 'Abilità',
-        type: type,
-      ),
+      SheetBanner(type == SheetType.v5 ? 'Skills' : 'Abilità', type: type),
       _traitColumns(
         character,
         _schema.abilities,
@@ -211,7 +247,10 @@ class _SheetPageState extends State<SheetPage> {
             labelWidth: 96,
             value: character.text(field.key),
             placeholder: '—',
-            onTap: () => _editText(field.key, field.label),
+            onTap: _locked
+                ? null
+                : () =>
+                      _editText(field.key, field.label, options: field.options),
           ),
       ],
     );
@@ -239,12 +278,15 @@ class _SheetPageState extends State<SheetPage> {
                     : character.text(trait.specialtyKey!),
                 value: character.dot(trait.key),
                 max: max,
+                allowed: _allowedFor(max),
                 onRoll: () => _quickRoll(trait.label, character.dot(trait.key)),
-                onChanged: (v) {
-                  setState(() => character.dots[trait.key] = v);
-                  _save();
-                },
-                onEditSpecialty: trait.specialtyKey == null
+                onChanged: _locked
+                    ? null
+                    : (v) {
+                        setState(() => character.dots[trait.key] = v);
+                        _save();
+                      },
+                onEditSpecialty: (_locked || trait.specialtyKey == null)
                     ? null
                     : () => _editText(
                         trait.specialtyKey!,
@@ -256,13 +298,16 @@ class _SheetPageState extends State<SheetPage> {
                 label: entry.name.isEmpty ? '—' : entry.name,
                 value: entry.value,
                 max: max,
+                allowed: _allowedFor(max),
                 onRoll: entry.name.isEmpty
                     ? null
                     : () => _quickRoll(entry.name, entry.value),
-                onChanged: (v) {
-                  setState(() => entry.value = v);
-                  _save();
-                },
+                onChanged: _locked
+                    ? null
+                    : (v) {
+                        setState(() => entry.value = v);
+                        _save();
+                      },
               ),
           ],
         ),
@@ -278,11 +323,14 @@ class _SheetPageState extends State<SheetPage> {
             label: virtue.label,
             value: character.dot(virtue.key),
             max: _schema.virtueMax,
+            allowed: _allowedFor(_schema.virtueMax),
             onRoll: () => _quickRoll(virtue.label, character.dot(virtue.key)),
-            onChanged: (v) {
-              setState(() => character.dots[virtue.key] = v);
-              _save();
-            },
+            onChanged: _locked
+                ? null
+                : (v) {
+                    setState(() => character.dots[virtue.key] = v);
+                    _save();
+                  },
           ),
       ],
     );
@@ -317,16 +365,18 @@ class _SheetPageState extends State<SheetPage> {
                     value: entry.name,
                     placeholder: section.nameLabel,
                     dense: true,
-                    onTap: () async {
-                      final result = await promptForText(
-                        context,
-                        title: section.nameLabel,
-                        initial: entry.name,
-                      );
-                      if (result == null) return;
-                      setState(() => entry.name = result);
-                      _save();
-                    },
+                    onTap: _locked
+                        ? null
+                        : () async {
+                            final result = await promptForText(
+                              context,
+                              title: section.nameLabel,
+                              initial: entry.name,
+                            );
+                            if (result == null) return;
+                            setState(() => entry.name = result);
+                            _save();
+                          },
                   ),
                 ),
                 if (section.hasDots) ...[
@@ -334,11 +384,16 @@ class _SheetPageState extends State<SheetPage> {
                   DotRow(
                     value: entry.value,
                     max: section.dotMax,
+                    allowed: section.limitedByGeneration
+                        ? _allowedFor(section.dotMax)
+                        : null,
                     size: 11,
-                    onChanged: (v) {
-                      setState(() => entry.value = v);
-                      _save();
-                    },
+                    onChanged: _locked
+                        ? null
+                        : (v) {
+                            setState(() => entry.value = v);
+                            _save();
+                          },
                   ),
                 ],
               ],
@@ -355,16 +410,20 @@ class _SheetPageState extends State<SheetPage> {
                           value: entry.fields[column.key] ?? '',
                           placeholder: column.label,
                           dense: true,
-                          onTap: () async {
-                            final result = await promptForText(
-                              context,
-                              title: column.label,
-                              initial: entry.fields[column.key] ?? '',
-                            );
-                            if (result == null) return;
-                            setState(() => entry.fields[column.key] = result);
-                            _save();
-                          },
+                          onTap: _locked
+                              ? null
+                              : () async {
+                                  final result = await promptForText(
+                                    context,
+                                    title: column.label,
+                                    initial: entry.fields[column.key] ?? '',
+                                  );
+                                  if (result == null) return;
+                                  setState(
+                                    () => entry.fields[column.key] = result,
+                                  );
+                                  _save();
+                                },
                         ),
                       ),
                       const SizedBox(width: 6),
@@ -385,22 +444,25 @@ class _SheetPageState extends State<SheetPage> {
                           labelWidth: 14,
                           dense: true,
                           value: l < entry.lines.length ? entry.lines[l] : '',
-                          onTap: () async {
-                            final result = await promptForText(
-                              context,
-                              title: 'Potere ${l + 1} — ${entry.name}',
-                              initial:
-                                  l < entry.lines.length ? entry.lines[l] : '',
-                            );
-                            if (result == null) return;
-                            setState(() {
-                              while (entry.lines.length <= l) {
-                                entry.lines.add('');
-                              }
-                              entry.lines[l] = result;
-                            });
-                            _save();
-                          },
+                          onTap: _locked
+                              ? null
+                              : () async {
+                                  final result = await promptForText(
+                                    context,
+                                    title: 'Potere ${l + 1} — ${entry.name}',
+                                    initial: l < entry.lines.length
+                                        ? entry.lines[l]
+                                        : '',
+                                  );
+                                  if (result == null) return;
+                                  setState(() {
+                                    while (entry.lines.length <= l) {
+                                      entry.lines.add('');
+                                    }
+                                    entry.lines[l] = result;
+                                  });
+                                  _save();
+                                },
                         ),
                       ),
                   ],
@@ -411,7 +473,8 @@ class _SheetPageState extends State<SheetPage> {
       );
     }
 
-    final useTwoColumns = wide || (section.lineSlots == 0 && visible.length > 6);
+    final useTwoColumns =
+        wide || (section.lineSlots == 0 && visible.length > 6);
     return _Grid(
       columns: useTwoColumns ? 2 : 1,
       gap: 14,
@@ -441,21 +504,26 @@ class _SheetPageState extends State<SheetPage> {
                   max: track.length,
                   size: 14,
                   alignment: MainAxisAlignment.center,
-                  onChanged: (v) {
-                    setState(() => character.dots[track.key] = v);
-                    _save();
-                  },
+                  onChanged: _locked
+                      ? null
+                      : (v) {
+                          setState(() => character.dots[track.key] = v);
+                          _save();
+                        },
                 )
               else if (track.rowLabels.isNotEmpty)
                 HealthLevels(
                   track: track,
                   states: character.track(track.key, track.length),
-                  onChanged: (i, v) {
-                    setState(
-                      () => character.track(track.key, track.length)[i] = v,
-                    );
-                    _save();
-                  },
+                  onChanged: _locked
+                      ? null
+                      : (i, v) {
+                          setState(
+                            () =>
+                                character.track(track.key, track.length)[i] = v,
+                          );
+                          _save();
+                        },
                 )
               else
                 BoxTrack(
@@ -463,12 +531,20 @@ class _SheetPageState extends State<SheetPage> {
                   maxState: track.maxState,
                   perRow: track.perRow,
                   filledFirst: track.firstStateFilled,
-                  onChanged: (i, v) {
-                    setState(
-                      () => character.track(track.key, track.length)[i] = v,
-                    );
-                    _save();
-                  },
+                  // La riserva di sangue dipende dalla generazione: le
+                  // caselle oltre restano stampate ma spente.
+                  allowed: track.key == 'sangue'
+                      ? _generation?.bloodPool
+                      : null,
+                  onChanged: _locked
+                      ? null
+                      : (i, v) {
+                          setState(
+                            () =>
+                                character.track(track.key, track.length)[i] = v,
+                          );
+                          _save();
+                        },
                 ),
               if (track.stateLegend.isNotEmpty)
                 Padding(
@@ -492,7 +568,9 @@ class _SheetPageState extends State<SheetPage> {
       return RuledBlock(
         value: character.text(section.key),
         lines: section.lines,
-        onTap: () => _editText(section.key, section.title, multiline: true),
+        onTap: _locked
+            ? null
+            : () => _editText(section.key, section.title, multiline: true),
       );
     }
     return _Grid(
@@ -510,11 +588,13 @@ class _SheetPageState extends State<SheetPage> {
                       RuledBlock(
                         value: character.text(field.key),
                         lines: 3,
-                        onTap: () => _editText(
-                          field.key,
-                          field.label,
-                          multiline: true,
-                        ),
+                        onTap: _locked
+                            ? null
+                            : () => _editText(
+                                field.key,
+                                field.label,
+                                multiline: true,
+                              ),
                       ),
                     ],
                   ),
@@ -530,7 +610,13 @@ class _SheetPageState extends State<SheetPage> {
                         value: character.text(field.key),
                         placeholder: '—',
                         dense: true,
-                        onTap: () => _editText(field.key, field.label),
+                        onTap: _locked
+                            ? null
+                            : () => _editText(
+                                field.key,
+                                field.label,
+                                options: field.options,
+                              ),
                       ),
                     ],
                   ),
@@ -547,6 +633,7 @@ class _TraitLine extends StatelessWidget {
     required this.value,
     required this.max,
     required this.onChanged,
+    this.allowed,
     this.specialty,
     this.onRoll,
     this.onEditSpecialty,
@@ -555,7 +642,14 @@ class _TraitLine extends StatelessWidget {
   final String label;
   final int value;
   final int max;
-  final ValueChanged<int> onChanged;
+
+  /// Null quando la scheda e' bloccata: i pallini restano visibili ma non
+  /// rispondono al tocco.
+  final ValueChanged<int>? onChanged;
+
+  /// Pallini utilizzabili secondo la generazione.
+  final int? allowed;
+
   final String? specialty;
   final VoidCallback? onRoll;
   final VoidCallback? onEditSpecialty;
@@ -625,6 +719,7 @@ class _TraitLine extends StatelessWidget {
             child: DotRow(
               value: value,
               max: max,
+              allowed: allowed,
               // con nove pallini serve un filo di spazio in piu' per i nomi
               size: max > 5 ? 10 : 11,
               onChanged: onChanged,
@@ -651,7 +746,10 @@ class _Grid extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           for (final child in children)
-            Padding(padding: EdgeInsets.only(bottom: gap / 2), child: child),
+            Padding(
+              padding: EdgeInsets.only(bottom: gap / 2),
+              child: child,
+            ),
         ],
       );
     }
@@ -678,6 +776,67 @@ class _Grid extends StatelessWidget {
           if (i != columns - 1) SizedBox(width: gap),
         ],
       ],
+    );
+  }
+}
+
+/// Banda in cima alla scheda: dice se le modifiche sono bloccate e permette
+/// di cambiare stato senza cercare il pulsante nella barra.
+class _LockBanner extends StatelessWidget {
+  const _LockBanner({required this.locked, required this.onToggle});
+
+  final bool locked;
+  final VoidCallback onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = locked ? VtmColors.ash : VtmColors.bloodBright;
+    return Material(
+      color: VtmColors.surface,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: onToggle,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: color.withValues(alpha: 0.5)),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                locked ? Icons.lock_outline : Icons.lock_open,
+                size: 20,
+                color: color,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  locked
+                      ? 'Modifiche bloccate'
+                      : 'Modifiche attive: la scheda cambia al tocco',
+                  style: TextStyle(
+                    fontFamily: 'Cinzel',
+                    fontSize: 13,
+                    color: color,
+                  ),
+                ),
+              ),
+              Text(
+                locked ? 'SBLOCCA' : 'BLOCCA',
+                style: TextStyle(
+                  fontFamily: 'Cinzel',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.1,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

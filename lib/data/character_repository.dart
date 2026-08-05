@@ -20,8 +20,7 @@ class CharacterRepository {
 
   Future<Directory> _directory() async {
     if (_dir != null) return _dir!;
-    final base =
-        _overrideDir ?? await getApplicationDocumentsDirectory();
+    final base = _overrideDir ?? await getApplicationDocumentsDirectory();
     final dir = Directory(p.join(base.path, 'schede'));
     if (!await dir.exists()) {
       await dir.create(recursive: true);
@@ -60,7 +59,10 @@ class CharacterRepository {
   /// Salvataggio ritardato: durante la modifica interattiva della scheda i
   /// tocchi sui pallini sono continui, si scrive su disco quando l'utente
   /// smette per un attimo.
-  void saveDebounced(Character character, {Duration delay = const Duration(milliseconds: 400)}) {
+  void saveDebounced(
+    Character character, {
+    Duration delay = const Duration(milliseconds: 400),
+  }) {
     _pendingWrites[character.id]?.cancel();
     _pendingWrites[character.id] = Timer(delay, () {
       _pendingWrites.remove(character.id);

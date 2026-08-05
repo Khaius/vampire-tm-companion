@@ -33,7 +33,11 @@ class BottomMenu extends StatelessWidget {
         color: VtmColors.surface,
         border: Border(top: BorderSide(color: Color(0xFF3A2C2E))),
         boxShadow: [
-          BoxShadow(color: Color(0x99000000), blurRadius: 12, offset: Offset(0, -2)),
+          BoxShadow(
+            color: Color(0x99000000),
+            blurRadius: 12,
+            offset: Offset(0, -2),
+          ),
         ],
       ),
       child: SafeArea(

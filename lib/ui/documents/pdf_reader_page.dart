@@ -71,10 +71,7 @@ class _PdfReaderPageState extends State<PdfReaderPage> {
                   padding: const EdgeInsets.only(bottom: 6),
                   child: Text(
                     'Pagina $_page di $_pages',
-                    style: const TextStyle(
-                      color: VtmColors.ash,
-                      fontSize: 13,
-                    ),
+                    style: const TextStyle(color: VtmColors.ash, fontSize: 13),
                   ),
                 ),
               ),
@@ -133,10 +130,12 @@ class _PdfReaderPageState extends State<PdfReaderPage> {
       },
       builders: PdfViewPinchBuilders<DefaultBuilderOptions>(
         options: const DefaultBuilderOptions(),
-        documentLoaderBuilder: (_) =>
-            const Center(child: CircularProgressIndicator(color: VtmColors.blood)),
-        pageLoaderBuilder: (_) =>
-            const Center(child: CircularProgressIndicator(color: VtmColors.blood)),
+        documentLoaderBuilder: (_) => const Center(
+          child: CircularProgressIndicator(color: VtmColors.blood),
+        ),
+        pageLoaderBuilder: (_) => const Center(
+          child: CircularProgressIndicator(color: VtmColors.blood),
+        ),
       ),
     );
   }

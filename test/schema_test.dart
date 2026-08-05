@@ -84,16 +84,12 @@ void main() {
     });
 
     test('le abilità V20 e Secoli Bui differiscono come sui PDF', () {
-      final v20 = schemaFor(SheetType.v20)
-          .abilities
-          .expand((g) => g.traits)
-          .map((t) => t.label)
-          .toSet();
-      final darkAges = schemaFor(SheetType.darkAges)
-          .abilities
-          .expand((g) => g.traits)
-          .map((t) => t.label)
-          .toSet();
+      final v20 = schemaFor(
+        SheetType.v20,
+      ).abilities.expand((g) => g.traits).map((t) => t.label).toSet();
+      final darkAges = schemaFor(
+        SheetType.darkAges,
+      ).abilities.expand((g) => g.traits).map((t) => t.label).toSet();
 
       expect(v20, contains('Armi da Fuoco'));
       expect(v20, contains('Informatica'));

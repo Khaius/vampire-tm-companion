@@ -150,7 +150,9 @@ class Character {
       (k, v) => MapEntry(
         k.toString(),
         (v as List? ?? [])
-            .map((e) => TraitEntry.fromJson(Map<String, dynamic>.from(e as Map)))
+            .map(
+              (e) => TraitEntry.fromJson(Map<String, dynamic>.from(e as Map)),
+            )
             .toList(),
       ),
     ),

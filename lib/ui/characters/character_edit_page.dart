@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/app_state.dart';
 import '../../core/theme.dart';
+import '../../data/generations.dart';
 import '../../data/schemas.dart';
 import '../../models/character.dart';
 import '../widgets/dots.dart';
@@ -62,6 +63,13 @@ class _CharacterEditPageState extends State<CharacterEditPage> {
     }
   }
 
+  /// La generazione scelta, se riconoscibile dal campo della scheda.
+  GenerationRule? get _generation =>
+      generationFromText(_character?.text('generation'));
+
+  /// Il massimo davvero utilizzabile per un tratto.
+  int _allowedFor(int sheetMax) => effectiveTraitMax(sheetMax, _generation);
+
   void _save() {
     final character = _character;
     if (character == null) return;
@@ -82,9 +90,7 @@ class _CharacterEditPageState extends State<CharacterEditPage> {
   Widget build(BuildContext context) {
     final character = _character;
     if (character == null) {
-      return const Scaffold(
-        body: Center(child: Text('Scheda non trovata')),
-      );
+      return const Scaffold(body: Center(child: Text('Scheda non trovata')));
     }
 
     return Scaffold(
@@ -102,9 +108,7 @@ class _CharacterEditPageState extends State<CharacterEditPage> {
               context: context,
               builder: (context) => AlertDialog(
                 title: const Text('Annullare la creazione?'),
-                content: const Text(
-                  'La scheda appena creata verrà eliminata.',
-                ),
+                content: const Text('La scheda appena creata verrà eliminata.'),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context, false),
@@ -197,6 +201,7 @@ class _CharacterEditPageState extends State<CharacterEditPage> {
                     label: trait.label,
                     value: character.dot(trait.key),
                     max: _schema.traitMax,
+                    allowed: _allowedFor(_schema.traitMax),
                     onChanged: (v) {
                       setState(() => character.dots[trait.key] = v);
                       _save();
@@ -215,6 +220,7 @@ class _CharacterEditPageState extends State<CharacterEditPage> {
                     label: trait.label,
                     value: character.dot(trait.key),
                     max: _schema.traitMax,
+                    allowed: _allowedFor(_schema.traitMax),
                     trailing: trait.specialtyKey == null
                         ? null
                         : _SpecialtyButton(
@@ -246,6 +252,7 @@ class _CharacterEditPageState extends State<CharacterEditPage> {
                     label: virtue.label,
                     value: character.dot(virtue.key),
                     max: _schema.virtueMax,
+                    allowed: _allowedFor(_schema.virtueMax),
                     onChanged: (v) {
                       setState(() => character.dots[virtue.key] = v);
                       _save();
@@ -257,19 +264,26 @@ class _CharacterEditPageState extends State<CharacterEditPage> {
             _Section(
               title: section.title,
               subtitle: section.hint,
-              children: [_ListSectionEditor(
-                key: ValueKey('list_${section.key}'),
-                section: section,
-                character: character,
-                onChanged: _save,
-              )],
+              children: [
+                _ListSectionEditor(
+                  key: ValueKey('list_${section.key}'),
+                  section: section,
+                  character: character,
+                  allowedDots: section.limitedByGeneration
+                      ? _allowedFor(section.dotMax)
+                      : section.dotMax,
+                  onChanged: _save,
+                ),
+              ],
             ),
           _Section(
             title: 'Tracker',
             children: [
               for (final track in _schema.tracks) ...[
                 _GroupLabel(
-                  track.note == null ? track.title : '${track.title} (${track.note})',
+                  track.note == null
+                      ? track.title
+                      : '${track.title} (${track.note})',
                 ),
                 if (track.kind == TrackKind.dots)
                   DotStepper(
@@ -306,6 +320,10 @@ class _CharacterEditPageState extends State<CharacterEditPage> {
                       perRow: track.perRow,
                       color: VtmColors.ash,
                       filledFirst: track.firstStateFilled,
+                      // la riserva di sangue dipende dalla generazione
+                      allowed: track.key == 'sangue'
+                          ? _generation?.bloodPool
+                          : null,
                       onChanged: (i, v) {
                         setState(() {
                           character.track(track.key, track.length)[i] = v;
@@ -344,7 +362,11 @@ class _CharacterEditPageState extends State<CharacterEditPage> {
                     )
                 else
                   _TextRow(
-                    field: FieldDef(section.key, section.title, multiline: true),
+                    field: FieldDef(
+                      section.key,
+                      section.title,
+                      multiline: true,
+                    ),
                     value: character.text(section.key),
                     minLines: section.lines,
                     onChanged: (v) {
@@ -384,6 +406,7 @@ class _CharacterEditPageState extends State<CharacterEditPage> {
               DotRow(
                 value: entries[i].value,
                 max: _schema.traitMax,
+                allowed: _allowedFor(_schema.traitMax),
                 color: VtmColors.ash,
                 filledColor: VtmColors.bloodBright,
                 size: 12,
@@ -442,10 +465,7 @@ class _Section extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
                     subtitle!,
-                    style: const TextStyle(
-                      color: VtmColors.ash,
-                      fontSize: 13,
-                    ),
+                    style: const TextStyle(color: VtmColors.ash, fontSize: 13),
                   ),
                 ),
               const SizedBox(height: 10),
@@ -499,7 +519,30 @@ class _TextRow extends StatelessWidget {
     final lines = minLines ?? (field.multiline ? 3 : 1);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),
-      child: field.suggestions.isEmpty
+      child: field.isSelect
+          ? DropdownButtonFormField<String>(
+              initialValue: field.options.contains(value) ? value : null,
+              decoration: InputDecoration(labelText: field.label),
+              items: [
+                const DropdownMenuItem<String>(
+                  value: null,
+                  child: Text('— non indicata —'),
+                ),
+                for (final option in field.options)
+                  DropdownMenuItem<String>(
+                    value: option,
+                    child: Text(
+                      option,
+                      style: const TextStyle(
+                        fontFamily: 'Cinzel',
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+              ],
+              onChanged: (v) => onChanged(v ?? ''),
+            )
+          : field.suggestions.isEmpty
           ? TextFormField(
               initialValue: value,
               decoration: InputDecoration(
@@ -636,11 +679,16 @@ class _ListSectionEditor extends StatefulWidget {
     super.key,
     required this.section,
     required this.character,
+    required this.allowedDots,
     required this.onChanged,
   });
 
   final ListSection section;
   final Character character;
+
+  /// Pallini utilizzabili: gia' ridotti dalla generazione dove serve.
+  final int allowedDots;
+
   final VoidCallback onChanged;
 
   @override
@@ -707,6 +755,7 @@ class _ListSectionEditorState extends State<_ListSectionEditor> {
                         DotRow(
                           value: entries[i].value,
                           max: section.dotMax,
+                          allowed: widget.allowedDots,
                           color: VtmColors.ash,
                           filledColor: VtmColors.bloodBright,
                           size: 12,
@@ -717,7 +766,7 @@ class _ListSectionEditorState extends State<_ListSectionEditor> {
                         ),
                         const Spacer(),
                         Text(
-                          '${entries[i].value} / ${section.dotMax}',
+                          '${entries[i].value} / ${widget.allowedDots}',
                           style: const TextStyle(
                             color: VtmColors.ash,
                             fontSize: 13,
@@ -735,7 +784,9 @@ class _ListSectionEditorState extends State<_ListSectionEditor> {
                           Expanded(
                             flex: column.flex,
                             child: TextFormField(
-                              key: ValueKey('${section.key}_${i}_${column.key}'),
+                              key: ValueKey(
+                                '${section.key}_${i}_${column.key}',
+                              ),
                               initialValue: entries[i].fields[column.key] ?? '',
                               decoration: InputDecoration(
                                 hintText: column.label,

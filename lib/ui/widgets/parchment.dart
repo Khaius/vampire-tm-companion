@@ -67,14 +67,8 @@ class _FramePainter extends CustomPainter {
     final railBottom = size.height - 16;
     final fill = Paint()..color = VtmColors.ink;
 
-    canvas.drawRect(
-      Rect.fromLTWH(6, railTop, size.width - 12, 3),
-      fill,
-    );
-    canvas.drawRect(
-      Rect.fromLTWH(6, railBottom - 3, size.width - 12, 3),
-      fill,
-    );
+    canvas.drawRect(Rect.fromLTWH(6, railTop, size.width - 12, 3), fill);
+    canvas.drawRect(Rect.fromLTWH(6, railBottom - 3, size.width - 12, 3), fill);
 
     const spacing = 22.0;
     for (var x = 14.0; x < size.width - 12; x += spacing) {
@@ -84,12 +78,23 @@ class _FramePainter extends CustomPainter {
 
     // Riquadro interno della pagina.
     canvas.drawRect(
-      Rect.fromLTWH(10, railTop + 12, size.width - 20, railBottom - railTop - 24),
+      Rect.fromLTWH(
+        10,
+        railTop + 12,
+        size.width - 20,
+        railBottom - railTop - 24,
+      ),
       ink,
     );
   }
 
-  void _spike(Canvas canvas, Paint paint, double x, double y, {required bool up}) {
+  void _spike(
+    Canvas canvas,
+    Paint paint,
+    double x,
+    double y, {
+    required bool up,
+  }) {
     const height = 13.0;
     const width = 3.0;
     final dir = up ? -1 : 1;
@@ -140,7 +145,11 @@ class SheetPaper extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(6),
         boxShadow: const [
-          BoxShadow(color: Color(0x66000000), blurRadius: 16, offset: Offset(0, 6)),
+          BoxShadow(
+            color: Color(0x66000000),
+            blurRadius: 16,
+            offset: Offset(0, 6),
+          ),
         ],
       ),
       child: CustomPaint(
@@ -206,7 +215,9 @@ class SheetBanner extends StatelessWidget {
       padding: const EdgeInsets.only(top: 14, bottom: 8),
       child: Row(
         children: [
-          Expanded(child: _Rule(color: color, medieval: medieval, left: true)),
+          Expanded(
+            child: _Rule(color: color, medieval: medieval, left: true),
+          ),
           // I titoli lunghi si restringono invece di sfondare la riga.
           Flexible(
             flex: 4,
@@ -223,7 +234,9 @@ class SheetBanner extends StatelessWidget {
               ),
             ),
           ),
-          Expanded(child: _Rule(color: color, medieval: medieval, left: false)),
+          Expanded(
+            child: _Rule(color: color, medieval: medieval, left: false),
+          ),
         ],
       ),
     );
@@ -231,7 +244,11 @@ class SheetBanner extends StatelessWidget {
 }
 
 class _Rule extends StatelessWidget {
-  const _Rule({required this.color, required this.medieval, required this.left});
+  const _Rule({
+    required this.color,
+    required this.medieval,
+    required this.left,
+  });
 
   final Color color;
   final bool medieval;
@@ -251,7 +268,9 @@ class _Rule extends StatelessWidget {
     }
     return SizedBox(
       height: 12,
-      child: CustomPaint(painter: _ArrowRulePainter(color: color, left: left)),
+      child: CustomPaint(
+        painter: _ArrowRulePainter(color: color, left: left),
+      ),
     );
   }
 }

@@ -78,7 +78,9 @@ class DocumentRepository {
     try {
       final list = jsonDecode(await file.readAsString()) as List;
       final docs = list
-          .map((e) => LocalDocument.fromJson(Map<String, dynamic>.from(e as Map)))
+          .map(
+            (e) => LocalDocument.fromJson(Map<String, dynamic>.from(e as Map)),
+          )
           .toList();
       docs.sort((a, b) => b.addedAt.compareTo(a.addedAt));
       return docs;

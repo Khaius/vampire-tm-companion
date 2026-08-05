@@ -24,7 +24,8 @@ class CharacterListPage extends StatelessWidget {
 
     final kept = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder: (_) => CharacterEditPage(characterId: character.id, isNew: true),
+        builder: (_) =>
+            CharacterEditPage(characterId: character.id, isNew: true),
       ),
     );
     if (!context.mounted) return;

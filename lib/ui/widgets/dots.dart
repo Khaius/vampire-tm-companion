@@ -18,6 +18,7 @@ class DotRow extends StatelessWidget {
     this.color = VtmColors.ink,
     this.filledColor,
     this.alignment = MainAxisAlignment.start,
+    this.allowed,
   });
 
   final int value;
@@ -29,9 +30,15 @@ class DotRow extends StatelessWidget {
   final Color? filledColor;
   final MainAxisAlignment alignment;
 
+  /// Quanti pallini sono davvero utilizzabili: quelli oltre restano
+  /// stampati ma spenti, perche' la generazione del personaggio non li
+  /// consente. Se null vale [max].
+  final int? allowed;
+
   @override
   Widget build(BuildContext context) {
     final fill = filledColor ?? color;
+    final usable = (allowed ?? max).clamp(0, max);
     return Row(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: alignment,
@@ -41,7 +48,7 @@ class DotRow extends StatelessWidget {
             padding: EdgeInsets.only(right: i == max ? 0 : spacing),
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: onChanged == null
+              onTap: (onChanged == null || i > usable)
                   ? null
                   : () {
                       HapticFeedback.selectionClick();
@@ -55,6 +62,7 @@ class DotRow extends StatelessWidget {
                   size: size,
                   color: color,
                   fillColor: fill,
+                  locked: i > usable,
                 ),
               ),
             ),
@@ -70,6 +78,7 @@ class _Dot extends StatelessWidget {
     required this.size,
     required this.color,
     required this.fillColor,
+    this.locked = false,
   });
 
   final bool filled;
@@ -77,8 +86,28 @@ class _Dot extends StatelessWidget {
   final Color color;
   final Color fillColor;
 
+  /// Pallino precluso dalla generazione: si vede ancora, sbarrato e
+  /// sbiadito, ma non si puo' toccare.
+  final bool locked;
+
   @override
   Widget build(BuildContext context) {
+    if (locked) {
+      // Un pallino oltre il limite di generazione resta disegnato ma
+      // sbarrato. Se era gia' stato assegnato lo si mostra comunque pieno,
+      // in tinta smorzata: il dato non va nascosto, va segnalato.
+      return SizedBox(
+        width: size,
+        height: size,
+        child: CustomPaint(
+          painter: _LockedDotPainter(
+            color: color.withValues(alpha: filled ? 0.55 : 0.30),
+            filled: filled,
+            fillColor: fillColor.withValues(alpha: 0.45),
+          ),
+        ),
+      );
+    }
     return Container(
       width: size,
       height: size,
@@ -89,6 +118,39 @@ class _Dot extends StatelessWidget {
       ),
     );
   }
+}
+
+class _LockedDotPainter extends CustomPainter {
+  const _LockedDotPainter({
+    required this.color,
+    this.filled = false,
+    this.fillColor = const Color(0x00000000),
+  });
+
+  final Color color;
+  final bool filled;
+  final Color fillColor;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final r = size.width / 2;
+    if (filled) {
+      canvas.drawCircle(Offset(r, r), r - 0.6, Paint()..color = fillColor);
+    }
+    final stroke = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.1
+      ..strokeCap = StrokeCap.round;
+    canvas.drawCircle(Offset(r, r), r - 0.6, stroke);
+    // sbarratura: il pallino c'e' ma e' fuori dalla portata del personaggio
+    final d = r * 0.62;
+    canvas.drawLine(Offset(r - d, r + d), Offset(r + d, r - d), stroke);
+  }
+
+  @override
+  bool shouldRepaint(_LockedDotPainter old) =>
+      old.color != color || old.filled != filled;
 }
 
 /// Pallini piu' un campo numerico: e' il controllo usato nell'editor, dove il
@@ -104,6 +166,7 @@ class DotStepper extends StatelessWidget {
     this.trailing,
     this.dotColor = VtmColors.ash,
     this.labelStyle,
+    this.allowed,
   });
 
   final String label;
@@ -113,6 +176,9 @@ class DotStepper extends StatelessWidget {
   final Widget? trailing;
   final Color dotColor;
   final TextStyle? labelStyle;
+
+  /// Massimo consentito dalla generazione: i pallini oltre restano spenti.
+  final int? allowed;
 
   @override
   Widget build(BuildContext context) {
@@ -132,13 +198,19 @@ class DotStepper extends StatelessWidget {
           DotRow(
             value: value,
             max: max,
+            allowed: allowed,
             onChanged: onChanged,
             color: dotColor,
             filledColor: VtmColors.bloodBright,
             size: 12,
           ),
           const SizedBox(width: 8),
-          _ValueBadge(value: value, max: max, onChanged: onChanged, label: label),
+          _ValueBadge(
+            value: value,
+            max: (allowed ?? max).clamp(0, max),
+            onChanged: onChanged,
+            label: label,
+          ),
         ],
       ),
     );
