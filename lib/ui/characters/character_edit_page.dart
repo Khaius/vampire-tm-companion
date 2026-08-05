@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/app_state.dart';
 import '../../core/theme.dart';
+import '../../data/clans.dart';
 import '../../data/generations.dart';
 import '../../data/schemas.dart';
 import '../../models/character.dart';
@@ -63,9 +64,29 @@ class _CharacterEditPageState extends State<CharacterEditPage> {
     }
   }
 
+  /// Cambia a ogni precompilazione da clan. Entra nelle chiavi dei campi
+  /// gia' disegnati per farli ricostruire: i TextFormField si tengono il
+  /// testo che avevano, e senza questo mostrerebbero ancora le righe vuote.
+  int _prefillEpoch = 0;
+
   /// La generazione scelta, se riconoscibile dal campo della scheda.
   GenerationRule? get _generation =>
       generationFromText(_character?.text('generation'));
+
+  /// Scelto il clan, si scrivono le sue Discipline e la sua debolezza.
+  void _applyClan(Character character, String name) {
+    final clan = clanRule(character.type, name);
+    if (clan == null) return;
+    final filled = applyClanTemplate(character, _schema, clan);
+    if (filled.isEmpty) return;
+    setState(() => _prefillEpoch++);
+    _save();
+    final message = filled.message;
+    if (message == null || !mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
 
   /// Il massimo davvero utilizzabile per un tratto.
   int _allowedFor(int sheetMax) => effectiveTraitMax(sheetMax, _generation);
@@ -182,11 +203,16 @@ class _CharacterEditPageState extends State<CharacterEditPage> {
             children: [
               for (final field in _schema.identity)
                 _TextRow(
+                  key: ValueKey('id_${field.key}_$_prefillEpoch'),
                   field: field,
                   value: character.text(field.key),
                   onChanged: (v) {
                     character.texts[field.key] = v;
+                    // i menu a tendina si ridisegnano sul valore salvato;
+                    // i campi liberi no, o perderebbero il cursore
+                    if (field.isSelect) setState(() {});
                     _save();
+                    if (field.key == 'clan') _applyClan(character, v);
                   },
                 ),
             ],
@@ -266,7 +292,7 @@ class _CharacterEditPageState extends State<CharacterEditPage> {
               subtitle: section.hint,
               children: [
                 _ListSectionEditor(
-                  key: ValueKey('list_${section.key}'),
+                  key: ValueKey('list_${section.key}_$_prefillEpoch'),
                   section: section,
                   character: character,
                   allowedDots: section.limitedByGeneration
@@ -353,6 +379,7 @@ class _CharacterEditPageState extends State<CharacterEditPage> {
                 if (section.fields != null)
                   for (final field in section.fields!)
                     _TextRow(
+                      key: ValueKey('txt_${field.key}_$_prefillEpoch'),
                       field: field,
                       value: character.text(field.key),
                       onChanged: (v) {
@@ -362,6 +389,7 @@ class _CharacterEditPageState extends State<CharacterEditPage> {
                     )
                 else
                   _TextRow(
+                    key: ValueKey('txt_${section.key}_$_prefillEpoch'),
                     field: FieldDef(
                       section.key,
                       section.title,
@@ -503,6 +531,7 @@ class _GroupLabel extends StatelessWidget {
 
 class _TextRow extends StatelessWidget {
   const _TextRow({
+    super.key,
     required this.field,
     required this.value,
     required this.onChanged,
@@ -520,28 +549,7 @@ class _TextRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),
       child: field.isSelect
-          ? DropdownButtonFormField<String>(
-              initialValue: field.options.contains(value) ? value : null,
-              decoration: InputDecoration(labelText: field.label),
-              items: [
-                const DropdownMenuItem<String>(
-                  value: null,
-                  child: Text('— non indicata —'),
-                ),
-                for (final option in field.options)
-                  DropdownMenuItem<String>(
-                    value: option,
-                    child: Text(
-                      option,
-                      style: const TextStyle(
-                        fontFamily: 'Cinzel',
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-              ],
-              onChanged: (v) => onChanged(v ?? ''),
-            )
+          ? _SelectRow(field: field, value: value, onChanged: onChanged)
           : field.suggestions.isEmpty
           ? TextFormField(
               initialValue: value,
@@ -560,6 +568,88 @@ class _TextRow extends StatelessWidget {
               suggestions: field.suggestions,
               onChanged: onChanged,
             ),
+    );
+  }
+}
+
+/// Campo a scelta chiusa: Generazione, Clan, Natura e Carattere.
+///
+/// Se il campo lo consente, l'ultima voce e' "Altro..." e apre la tastiera;
+/// e un valore fuori elenco gia' scritto sulla scheda compare comunque nel
+/// menu, altrimenti il campo lo perderebbe.
+class _SelectRow extends StatelessWidget {
+  const _SelectRow({
+    required this.field,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final FieldDef field;
+  final String value;
+  final ValueChanged<String> onChanged;
+
+  /// Sentinella della voce "Altro...": uno spazio davanti, cosi' non puo'
+  /// coincidere con niente di scritto a mano.
+  static const _writeItMyself = ' altro';
+
+  @override
+  Widget build(BuildContext context) {
+    final outsideList = value.isNotEmpty && !field.options.contains(value);
+    return DropdownButtonFormField<String>(
+      // la chiave lega il campo al valore salvato: quando la scheda cambia
+      // da sola (la scelta del clan) il menu si ridisegna aggiornato
+      key: ValueKey('${field.key}_$value'),
+      initialValue: value.isEmpty ? null : value,
+      isExpanded: true,
+      decoration: InputDecoration(labelText: field.label),
+      items: [
+        const DropdownMenuItem<String>(
+          value: null,
+          child: Text('— non indicato —'),
+        ),
+        if (outsideList)
+          DropdownMenuItem<String>(
+            value: value,
+            child: Text(
+              value,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontFamily: 'Cinzel', fontSize: 16),
+            ),
+          ),
+        for (final option in field.options)
+          DropdownMenuItem<String>(
+            value: option,
+            child: Text(
+              option,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontFamily: 'Cinzel', fontSize: 16),
+            ),
+          ),
+        if (field.allowCustom)
+          const DropdownMenuItem<String>(
+            value: _writeItMyself,
+            child: Text(
+              'Altro...',
+              style: TextStyle(
+                fontFamily: 'Cinzel',
+                fontSize: 16,
+                color: VtmColors.gold,
+              ),
+            ),
+          ),
+      ],
+      onChanged: (v) async {
+        if (v != _writeItMyself) {
+          onChanged(v ?? '');
+          return;
+        }
+        final typed = await promptForText(
+          context,
+          title: field.label,
+          initial: value,
+        );
+        if (typed != null) onChanged(typed);
+      },
     );
   }
 }

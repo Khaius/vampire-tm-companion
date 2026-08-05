@@ -1,23 +1,7 @@
 import '../models/sheet_type.dart';
+import 'clans.dart';
 import 'generations.dart';
 import 'sheet_schema.dart';
-
-/// Clan disponibili nel menu a tendina della scheda Camarilla Italia.
-const _v5Clans = [
-  'Brujah',
-  'Caitiff',
-  'Gangrel',
-  'Giovanni',
-  'Lasombra',
-  'Malkavian',
-  'Nosferatu',
-  'Ravnos',
-  'Sangue Debole',
-  'Toreador',
-  'Tremere',
-  'Tzimisce',
-  'Ventrue',
-];
 
 /// Tipi di predatore della scheda ufficiale.
 const _v5Predators = [
@@ -146,10 +130,11 @@ const _v5HavenTraits = [
 /// dell'Associazione Camarilla Italia.
 const v5Schema = SheetSchema(
   type: SheetType.v5,
+  clanWeaknessKey: 'debolezza_clan',
   identity: [
     FieldDef('name', 'Nome'),
     FieldDef('ambition', 'Ambizione'),
-    FieldDef('clan', 'Clan', suggestions: _v5Clans),
+    FieldDef('clan', 'Clan', options: v5ClanNames, allowCustom: true),
     FieldDef('concept', 'Concetto'),
     FieldDef('desire', 'Desiderio'),
     FieldDef('generation', 'Generazione', options: generationRomanOptions),

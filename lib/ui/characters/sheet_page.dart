@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/app_state.dart';
 import '../../core/theme.dart';
+import '../../data/clans.dart';
 import '../../data/generations.dart';
 import '../../data/schemas.dart';
 import '../../models/character.dart';
@@ -80,6 +81,7 @@ class _SheetPageState extends State<SheetPage> {
     String title, {
     bool multiline = false,
     List<String> options = const [],
+    bool allowCustom = false,
   }) async {
     final character = _character!;
     final result = options.isNotEmpty
@@ -88,6 +90,7 @@ class _SheetPageState extends State<SheetPage> {
             title: title,
             initial: character.text(key),
             options: options,
+            allowCustom: allowCustom,
           )
         : await promptForText(
             context,
@@ -98,6 +101,23 @@ class _SheetPageState extends State<SheetPage> {
     if (result == null) return;
     setState(() => character.texts[key] = result);
     _save();
+    if (key == 'clan') _applyClan(character, result);
+  }
+
+  /// Scelto il clan, la scheda si scrive da sola per la parte che il clan
+  /// detta: le sue Discipline e la sua debolezza.
+  void _applyClan(Character character, String name) {
+    final clan = clanRule(character.type, name);
+    if (clan == null) return;
+    final filled = applyClanTemplate(character, _schema, clan);
+    if (filled.isEmpty) return;
+    setState(() {});
+    _save();
+    final message = filled.message;
+    if (message == null || !mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _quickRoll(String label, int value) {
@@ -249,8 +269,12 @@ class _SheetPageState extends State<SheetPage> {
             placeholder: '—',
             onTap: _locked
                 ? null
-                : () =>
-                      _editText(field.key, field.label, options: field.options),
+                : () => _editText(
+                    field.key,
+                    field.label,
+                    options: field.options,
+                    allowCustom: field.allowCustom,
+                  ),
           ),
       ],
     );
@@ -616,6 +640,7 @@ class _SheetPageState extends State<SheetPage> {
                                 field.key,
                                 field.label,
                                 options: field.options,
+                                allowCustom: field.allowCustom,
                               ),
                       ),
                     ],

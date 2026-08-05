@@ -30,10 +30,47 @@ I nove pallini della scheda dei Secoli Bui non sono un errore: sono
 esattamente quelli stampati sul PDF originale, che lascia spazio ai tratti
 oltre il 5 delle generazioni basse.
 
-Clan, predatori, discipline, background, meriti e difetti proposti in
-autocompletamento sono estratti dai menu a tendina delle schede ufficiali.
-Restano campi liberi: si può scrivere qualsiasi cosa. L'unica eccezione è la
-**Generazione**, che si sceglie da un menu in numeri romani (II–XV).
+Predatori, discipline, background, meriti e difetti proposti in
+autocompletamento sono estratti dai menu a tendina delle schede ufficiali:
+restano campi liberi, si può scrivere qualsiasi cosa.
+
+Quattro campi invece si scelgono da un menu: **Clan**, **Natura**,
+**Carattere** e **Generazione**. I primi tre finiscono con "Altro…", che apre
+la tastiera — l'elenco ufficiale è un punto di partenza, non una gabbia — e
+un valore fuori elenco già scritto sulla scheda resta lì e compare nel menu.
+La Generazione no: quella è una scelta chiusa in numeri romani (II–XV).
+
+Natura e Carattere propongono i trenta archetipi del manuale, in ordine
+alfabetico. La scheda della 5ª edizione non li ha: al loro posto stampa
+Ambizione e Desiderio, che restano campi liberi.
+
+### Il clan riempie la scheda
+
+Scelto il clan, l'app scrive da sola le sue **Discipline** nelle prime righe
+libere e la sua **debolezza** nel riquadro che quella scheda le dedica
+("Debolezza di Clan" sulla V5, "Debolezza" sulle altre due).
+
+Le tre edizioni non dicono le stesse cose sullo stesso clan, quindi ogni
+edizione ha la sua tabella: i Gangrel della V5 hanno *Proteide*, quelli della
+20ª *Protean*; i Tremere della V5 hanno un sangue che non vincola più nessuno,
+quelli dei Secoli Bui sono ancora gli usurpatori che tutti odiano. I Cappadoci
+esistono solo nei Secoli Bui, i Giovanni solo nelle altre due.
+
+Il riempimento non cancella niente di quello che hai scritto:
+
+- una Disciplina già presente non viene duplicata e tiene i suoi pallini;
+- le nuove entrano nelle righe rimaste vuote, senza allungare la scheda
+  finché c'è posto;
+- la debolezza viene sovrascritta solo se è vuota o se l'aveva scritta l'app
+  per un altro clan. Se ci hai messo del tuo, resta.
+
+Un clan scritto a mano con "Altro…" non precompila niente, per il semplice
+motivo che l'app non sa cosa sia.
+
+I dati vengono dai manuali delle tre edizioni, riscontrati online dove le
+fonti si contraddicevano. Un caso resta incerto: le Lhiannan dei Secoli Bui,
+per cui alcune fonti danno *Ogham* e altre *Taumaturgia* come terza
+Disciplina — qui trovi Ogham. Come tutto il resto, si corregge a mano.
 
 ### Il limite imposto dalla generazione
 
@@ -170,6 +207,11 @@ Le tre schede sono descritte da uno **schema** dichiarativo
 (`lib/data/schema_*.dart`): editor e rendering leggono lo stesso schema, così
 non possono divergere. Aggiungere un tratto significa aggiungere una riga lì.
 
+Le regole che non stanno sulla scheda ma la governano vivono accanto agli
+schemi: `generations.dart` per i limiti di generazione, `clans.dart` per le
+Discipline e le debolezze di clan delle tre edizioni, `archetypes.dart` per
+gli archetipi di Natura e Carattere.
+
 I dati vivono in un file JSON per personaggio nella cartella privata
 dell'app, scritti con un piccolo ritardo mentre si tocca la scheda per non
 scrivere su disco a ogni pallino.
@@ -184,9 +226,12 @@ flutter test --update-goldens        # riallinea le immagini di riferimento
 
 I test coprono il conteggio dei dadi (compreso l'esempio delle specifiche),
 i limiti dei pallini delle tre schede, il salvataggio su disco, la
-navigazione del menu e la regola della scheda che resta aperta. I **golden
-test** in `test/goldens/` sono immagini di riferimento delle schermate: ogni
-modifica al layout che le altera fa fallire il test.
+navigazione del menu, la regola della scheda che resta aperta e le tabelle
+dei clan — comprese le verifiche che il menu di ogni scheda e la tabella
+della sua edizione non possano divergere, e che le Discipline precompilate
+esistano fra quelle che quella scheda propone. I **golden test** in
+`test/goldens/` sono immagini di riferimento delle schermate: ogni modifica
+al layout che le altera fa fallire il test.
 
 ## Licenze
 
