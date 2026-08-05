@@ -1,4 +1,4 @@
-import 'package:file_picker/file_picker.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -25,15 +25,17 @@ class _DocumentsPageState extends State<DocumentsPage> {
     if (_importing) return;
     setState(() => _importing = true);
     try {
-      final picked = await FilePicker.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: const ['pdf'],
-        withData: false,
+      const pdfGroup = XTypeGroup(
+        label: 'PDF',
+        extensions: <String>['pdf'],
+        mimeTypes: <String>['application/pdf'],
+        uniformTypeIdentifiers: <String>['com.adobe.pdf'],
       );
-      final path = picked?.files.single.path;
-      if (path == null || !mounted) return;
+      final picked = await openFile(acceptedTypeGroups: const [pdfGroup]);
+      if (picked == null || !mounted) return;
 
-      final suggested = picked!.files.single.name.replaceAll(
+      final path = picked.path;
+      final suggested = picked.name.replaceAll(
         RegExp(r'\.pdf$', caseSensitive: false),
         '',
       );

@@ -17,9 +17,12 @@ pluginManagement {
     }
 }
 
+// AGP resta sulla linea 8: la 9 non e' ancora digerita dai plugin usati
+// (pdfx e' costruito su AGP 8.5, file_selector_android su 8.13) e la
+// compilazione Kotlin dei loro moduli non produce classi.
 plugins {
     id("dev.flutter.flutter-plugin-loader") version "1.0.0"
-    id("com.android.application") version "9.0.1" apply false
+    id("com.android.application") version "8.13.1" apply false
     id("org.jetbrains.kotlin.android") version "2.3.20" apply false
 }
 
