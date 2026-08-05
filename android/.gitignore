@@ -12,3 +12,9 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+
+# La chiave di firma e' volutamente versionata: non protegge un segreto,
+# serve solo a tenere stabile la firma dell'app fra una build e l'altra,
+# altrimenti ogni APK risulterebbe di un autore diverso e non si potrebbe
+# installare sopra il precedente. Vedi la nota nel README.
+!app/vtm-signing.jks

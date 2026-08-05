@@ -25,11 +25,26 @@ android {
         versionName = flutter.versionName
     }
 
+    // Chiave di firma stabile e versionata nel repository.
+    //
+    // Non è un segreto e non vuole esserlo: serve solo a far sì che ogni
+    // build esca firmata allo stesso modo. Con la chiave di debug generata
+    // al volo, ogni compilazione su una macchina pulita produce una firma
+    // diversa e Android rifiuta di installare l'aggiornamento sopra la
+    // versione già presente. Per una pubblicazione sul Play Store servirebbe
+    // invece una chiave vera, tenuta fuori dal repository.
+    signingConfigs {
+        create("release") {
+            storeFile = file("vtm-signing.jks")
+            storePassword = "vtmcompanion"
+            keyAlias = "vtm"
+            keyPassword = "vtmcompanion"
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 }

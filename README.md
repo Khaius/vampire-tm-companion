@@ -74,8 +74,26 @@ analizza, testa e compila l'APK di release. Il file si scarica in due modi:
    aprire dal telefono;
 2. dagli artifact della run in **Actions → Build APK → vtm-companion-apk**.
 
-L'APK è firmato con la chiave di debug, quindi al primo avvio Android chiede
-di autorizzare l'installazione da origini sconosciute.
+Android chiede di autorizzare l'installazione da origini sconosciute, e Play
+Protect può mostrare un avviso: sono normali per un'app che non arriva dallo
+store.
+
+### La chiave di firma
+
+L'APK è firmato con `android/app/vtm-signing.jks`, che sta **dentro il
+repository** insieme alla sua password. È una scelta deliberata, non una
+svista: quella chiave non protegge nulla, serve solo a far uscire tutte le
+build firmate allo stesso modo.
+
+Senza, ogni compilazione su una macchina pulita genera al volo una chiave di
+debug diversa, e Android rifiuta di installare l'aggiornamento sopra la
+versione già presente ("app non installata"): l'unico rimedio sarebbe
+disinstallare e reinstallare ogni volta, perdendo le schede.
+
+Il rovescio della medaglia: chiunque abbia il repository può firmare un APK
+che Android considera un aggiornamento di questa app. Per un'app personale
+distribuita fra amici va bene; per pubblicarla sul Play Store serve una
+chiave vera, generata a parte e tenuta fuori dal repository.
 
 ## Compilare in locale
 
