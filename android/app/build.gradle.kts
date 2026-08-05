@@ -39,6 +39,15 @@ android {
             storePassword = "vtmcompanion"
             keyAlias = "vtm"
             keyPassword = "vtmcompanion"
+
+            // Con minSdk 24 Gradle userebbe solo lo schema v2. Alcuni
+            // installer di sistema (MIUI, EMUI e altre personalizzazioni)
+            // pretendono comunque la vecchia firma v1 e altrimenti si
+            // fermano con un generico "app non installata". Attivarli tutti
+            // e tre non costa nulla e toglie di mezzo il dubbio.
+            enableV1Signing = true
+            enableV2Signing = true
+            enableV3Signing = true
         }
     }
 
