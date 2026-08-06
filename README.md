@@ -153,6 +153,27 @@ Android chiede di autorizzare l'installazione da origini sconosciute, e Play
 Protect può mostrare un avviso: sono normali per un'app che non arriva dallo
 store.
 
+Il link buono da girare in giro è
+<https://github.com/Khaius/vampire-tm-companion/releases/latest>, che punta
+sempre all'ultima versione pubblicata e quindi non invecchia.
+
+### Pubblicare una versione
+
+Si avvia a mano la pipeline (**Actions → Build APK → Run workflow**)
+indicando il tag in `release_tag`, per esempio `v1.3.0`. Il tag lo crea
+GitHub sul commit di quell'avvio: da qui i tag non si possono spingere via
+git, il proxy risponde 403.
+
+Il campo `highlights`, se compilato, finisce in cima alle note della release
+sotto "Novità di questa versione"; sotto viene sempre il testo fisso di
+`.github/release-notes.md` — quale file scaricare, come si installa, cosa
+succede aggiornando — e in fondo l'elenco delle pull request che GitHub
+genera da solo.
+
+Prima di pubblicare va alzato il **numero di build** in `pubspec.yaml`
+(`1.2.0+3` → il `+3`): senza, Android considera l'APK nuovo un doppione di
+quello già installato e rifiuta l'aggiornamento.
+
 ### La chiave di firma
 
 L'APK è firmato con `android/app/vtm-signing.jks`, che sta **dentro il
