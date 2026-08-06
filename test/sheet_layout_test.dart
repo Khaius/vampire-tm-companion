@@ -181,6 +181,19 @@ void main() {
       await tester.tap(find.byIcon(Icons.edit_note));
       await tester.pumpAndSettle();
 
+      // nell'editor il titolo sta sotto l'Identità, che ora ha anche la foto
+      await tester.scrollUntilVisible(
+        find.text('ATTRIBUTI'),
+        250,
+        // sotto c'è ancora la scheda: si scorre quella dell'editor
+        scrollable: find
+            .descendant(
+              of: find.byType(CharacterEditPage),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      await tester.pumpAndSettle();
       await tester.tap(find.text('ATTRIBUTI'));
       await tester.pumpAndSettle();
       expect(find.text('Forza'), findsNothing);

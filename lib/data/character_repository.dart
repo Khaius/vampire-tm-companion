@@ -1,11 +1,32 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
+import 'dart:typed_data';
 
+import 'package:image/image.dart' as img;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../models/character.dart';
+
+/// Riduce la foto a qualcosa che stia in tasca.
+///
+/// Le foto di un telefono moderno pesano diversi megabyte l'una: cosi' come
+/// sono renderebbero enormi sia la cartella dell'app sia i file esportati,
+/// che devono poter passare da WhatsApp. Mille pixel sul lato lungo sono piu'
+/// che sufficienti per un ritratto in una scheda.
+Uint8List _shrinkPhoto(Uint8List raw) {
+  final decoded = img.decodeImage(raw);
+  if (decoded == null) return raw;
+  final resized = decoded.width >= decoded.height
+      ? img.copyResize(decoded, width: 1024)
+      : img.copyResize(decoded, height: 1024);
+  final source = (decoded.width <= 1024 && decoded.height <= 1024)
+      ? decoded
+      : resized;
+  return img.encodeJpg(source, quality: 85);
+}
 
 /// Archivio delle schede: un file JSON per personaggio nella cartella privata
 /// dell'app. Nessuna rete, nessun database: lettura e scrittura dirette, cosi'
@@ -82,5 +103,63 @@ class CharacterRepository {
     if (await file.exists()) {
       await file.delete();
     }
+  }
+
+  // ------------------------------------------------------------------ foto
+
+  Future<Directory> _photoDirectory() async {
+    final base = _overrideDir ?? await getApplicationDocumentsDirectory();
+    final dir = Directory(p.join(base.path, 'foto'));
+    if (!await dir.exists()) {
+      await dir.create(recursive: true);
+    }
+    return dir;
+  }
+
+  /// Il percorso su disco della foto di una scheda, o null se non c'e'.
+  Future<String?> photoPath(Character character) async {
+    final name = character.photoFile;
+    if (name == null) return null;
+    final dir = await _photoDirectory();
+    final file = File(p.join(dir.path, name));
+    return await file.exists() ? file.path : null;
+  }
+
+  /// Copia nella cartella dell'app la foto scelta dal telefono.
+  ///
+  /// L'immagine viene rimpicciolita e riscritta in JPEG: da quel momento la
+  /// scheda non dipende piu' dal file originale, che puo' anche sparire.
+  Future<String> setPhotoFromFile(Character character, String sourcePath) =>
+      _writePhoto(character, File(sourcePath).readAsBytesSync());
+
+  /// Come [setPhotoFromFile], ma partendo dai byte: serve all'importazione,
+  /// dove la foto arriva dentro al pacchetto.
+  Future<String> setPhotoFromBytes(Character character, Uint8List bytes) =>
+      _writePhoto(character, bytes);
+
+  Future<String> _writePhoto(Character character, Uint8List raw) async {
+    // il ridimensionamento e' lavoro pesante: fuori dal filo dell'interfaccia
+    final small = await Isolate.run(() => _shrinkPhoto(raw));
+    final dir = await _photoDirectory();
+    final name = '${character.id}.jpg';
+    await File(p.join(dir.path, name)).writeAsBytes(small, flush: true);
+    character.photoFile = name;
+    return name;
+  }
+
+  Future<void> removePhoto(Character character) async {
+    final name = character.photoFile;
+    character.photoFile = null;
+    if (name == null) return;
+    final dir = await _photoDirectory();
+    final file = File(p.join(dir.path, name));
+    if (await file.exists()) await file.delete();
+  }
+
+  /// I byte della foto, per l'esportazione.
+  Future<Uint8List?> photoBytes(Character character) async {
+    final path = await photoPath(character);
+    if (path == null) return null;
+    return File(path).readAsBytes();
   }
 }

@@ -1,7 +1,13 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:flutter/widgets.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
 import '../data/character_repository.dart';
+import '../data/character_transfer.dart';
 import '../data/document_repository.dart';
 import '../models/character.dart';
 import '../models/dice.dart';
@@ -122,8 +128,94 @@ class AppState extends ChangeNotifier {
   Future<void> deleteCharacter(Character character) async {
     _all.removeWhere((c) => c.id == character.id);
     if (_selectedId == character.id) _selectedId = null;
+    await _characters.removePhoto(character);
     await _characters.delete(character.id);
     notifyListeners();
+  }
+
+  // ------------------------------------------------------------------ foto
+
+  Future<void> setPhoto(Character character, String sourcePath) async {
+    await _characters.setPhotoFromFile(character, sourcePath);
+    touch(character, immediate: true);
+  }
+
+  Future<void> removePhoto(Character character) async {
+    await _characters.removePhoto(character);
+    touch(character, immediate: true);
+  }
+
+  // --------------------------------------------------- esporta e importa
+
+  /// Scrive il pacchetto delle schede scelte e ne restituisce il file.
+  ///
+  /// Il file finisce nella cartella di appoggio dell'app: da li' lo prende
+  /// il pannello di condivisione del telefono. Non serve nessun permesso,
+  /// perche' non usciamo mai dallo spazio dell'app finche' non e' l'utente
+  /// a decidere dove mandarlo.
+  Future<File> exportCharacters(
+    List<Character> characters, {
+    Directory? overrideDir,
+  }) async {
+    final photos = <String, Uint8List>{};
+    for (final character in characters) {
+      final bytes = await _characters.photoBytes(character);
+      if (bytes != null) photos[character.id] = bytes;
+    }
+
+    final base =
+        overrideDir ??
+        await getTemporaryDirectory().catchError(
+          (_) async => getApplicationDocumentsDirectory(),
+        );
+    final dir = Directory(p.join(base.path, 'export'));
+    if (!await dir.exists()) await dir.create(recursive: true);
+
+    final file = File(p.join(dir.path, CharacterTransfer.fileName(characters)));
+    await file.writeAsString(
+      CharacterTransfer.encode(characters, photos: photos),
+      flush: true,
+    );
+    return file;
+  }
+
+  /// Aggiunge alla raccolta le schede lette da un file esportato.
+  ///
+  /// Ogni scheda entra sempre come scheda nuova, con un id suo: reimportare
+  /// un file non sovrascrive mai il lavoro fatto sul telefono. Se la stessa
+  /// scheda c'era gia', il nome lo dice.
+  Future<List<Character>> importCharacters(
+    List<ImportedCharacter> imported,
+  ) async {
+    final existingIds = _all.map((c) => c.id).toSet();
+    final added = <Character>[];
+
+    for (final entry in imported) {
+      final source = entry.character;
+      final copy = Character(
+        id: _uuid.v4(),
+        type: source.type,
+        texts: Map<String, String>.from(source.texts),
+        dots: Map<String, int>.from(source.dots),
+        lists: source.lists.map(
+          (k, v) => MapEntry(k, v.map((e) => e.copy()).toList()),
+        ),
+        tracks: source.tracks.map((k, v) => MapEntry(k, List<int>.from(v))),
+        collapsed: Set<String>.from(source.collapsed),
+      );
+      if (existingIds.contains(source.id)) {
+        copy.texts['name'] = '${source.displayName} (importata)';
+      }
+      if (entry.photo != null) {
+        await _characters.setPhotoFromBytes(copy, entry.photo!);
+      }
+      await _characters.save(copy);
+      _all.insert(0, copy);
+      added.add(copy);
+    }
+
+    notifyListeners();
+    return added;
   }
 
   Future<Character> duplicateCharacter(Character source) async {
@@ -136,8 +228,11 @@ class AppState extends ChangeNotifier {
         (k, v) => MapEntry(k, v.map((e) => e.copy()).toList()),
       ),
       tracks: source.tracks.map((k, v) => MapEntry(k, List<int>.from(v))),
+      collapsed: Set<String>.from(source.collapsed),
     );
     copy.texts['name'] = '${source.displayName} (copia)';
+    final photo = await _characters.photoBytes(source);
+    if (photo != null) await _characters.setPhotoFromBytes(copy, photo);
     _all.insert(0, copy);
     await _characters.save(copy);
     notifyListeners();

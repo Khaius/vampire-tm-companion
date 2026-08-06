@@ -7,7 +7,7 @@ Tre funzioni, sempre raggiungibili dal menu in fondo allo schermo:
 
 | Icona | Sezione | Cosa fa |
 |---|---|---|
-| Papiro | **Schede** | Crea, consulta e modifica le schede personaggio |
+| Papiro | **Schede** | Crea, consulta, modifica, esporta e importa le schede |
 | d10 | **Dadi** | Tira i d10 con difficoltà e conteggio dei successi |
 | Libro aperto | **Documenti** | Carica e consulta PDF salvati sul dispositivo |
 
@@ -29,6 +29,15 @@ L'app riproduce fedelmente i tre stampati ufficiali, compresi i limiti dei
 I nove pallini della scheda dei Secoli Bui non sono un errore: sono
 esattamente quelli stampati sul PDF originale, che lascia spazio ai tratti
 oltre il 5 delle generazioni basse.
+
+La scheda dei Secoli Bui tiene le sue abilità d'epoca — Cavalcare, Tiro con
+l'Arco, Teologia, Governo Domestico, Saggezza Popolare, Enigmi, Commercio —
+**e ha anche tutte quelle moderne** della 20ª: Armi da Fuoco, Guidare,
+Criminalità, Bassifondi, Finanza, Informatica, Scienze, Tecnologia. Serve
+alle cronache che partono nel Medioevo e con qualche salto temporale
+arrivano ai nostri giorni: il personaggio non cambia scheda per strada. Le
+abilità in comune usano la stessa chiave sulle due schede, quindi un valore
+scritto è lo stesso tratto in entrambe.
 
 Predatori, discipline, background, meriti e difetti proposti in
 autocompletamento sono estratti dai menu a tendina delle schede ufficiali:
@@ -114,9 +123,10 @@ generazione indietro le caselle tornano com'erano.
 
 ## Come si usa
 
-**Schede.** Il "+" in basso a destra apre la scelta dell'edizione, poi si
-compila il modulo. Nessun campo è obbligatorio: si può salvare una scheda
-completamente vuota e riprenderla dopo. A fine creazione la scheda viene
+**Schede.** Il menu in alto a destra (tre pallini) apre le tre azioni della
+lista: **nuova scheda**, **importa** ed **esporta**. La creazione parte dalla
+scelta dell'edizione, poi si compila il modulo. Nessun campo è obbligatorio:
+si può salvare una scheda completamente vuota e riprenderla dopo. A fine creazione la scheda viene
 disegnata come l'originale cartaceo — ed è viva: i pallini, le caselle di
 salute, volontà e sangue si toccano e cambiano subito, le righe si toccano
 per scrivere. Toccando il **nome di un tratto** si passa ai dadi con la
@@ -135,6 +145,36 @@ riga per aggiungere compare solo da sbloccata, e il nome viene chiesto
 subito: una riga senza nome sarebbe di nuovo una riga vuota. Le schede fatte
 con le versioni precedenti perdono le righe rimaste in bianco la prima volta
 che si aprono in modifica.
+
+**La foto del personaggio.** Nel modulo di modifica, in cima all'Identità,
+c'è il riquadro del ritratto: si sceglie un'immagine dalla memoria del
+telefono e viene **copiata dentro la scheda**, quindi resta anche se il file
+originale sparisce. La foto compare in alto a sinistra sulla scheda
+disegnata (da sbloccata si tocca per cambiarla, si tiene premuto per
+toglierla) e come miniatura nella lista.
+
+Le immagini vengono rimpicciolite a mille pixel sul lato lungo e riscritte in
+JPEG: una foto da cinque megabyte ne occupa meno di duecento kilobyte, così
+la cartella dell'app resta leggera e le schede esportate si possono mandare
+via chat.
+
+### Portare le schede altrove
+
+Dal menu della lista, **Esporta** fa comparire un quadratino di fianco a ogni
+scheda e una barra in fondo: da lì si sceglie cosa mandare — "seleziona
+tutto" prende l'intera raccolta — e si conferma con l'icona di
+condivisione. L'app scrive **un solo file** `.vtm.json` e lo passa al
+pannello di condivisione del telefono: WhatsApp, Telegram, mail, Drive,
+"Salva su file". Dentro ci sono le schede complete, foto comprese.
+
+**Importa** legge quello stesso file. Ogni scheda entra come scheda nuova:
+reimportare non sovrascrive mai quello che hai sul telefono, e se la scheda
+c'era già il nome lo dice ("Lucrezia (importata)"). Un file rovinato o di
+un'altra app non fa danni, dice solo cosa non va.
+
+Il formato è JSON leggibile, non un formato binario: se un giorno questa app
+non ci fosse più, le schede di una cronaca lunga restano aperte con un
+qualunque editor di testo.
 
 La scheda si apre **bloccata**: si può sfogliare senza il rischio di
 cambiarla per sbaglio mentre si scorre. Il lucchetto in alto (o la banda
@@ -238,7 +278,7 @@ lib/
     characters/   lista, editor e scheda renderizzata
     dice/         schermata dei dadi
     documents/    libreria PDF e lettore
-    widgets/      pallini, tracker, pergamena, dialoghi
+    widgets/      pallini, tracker, pergamena, dialoghi, foto
 assets/
   fonts/          Cinzel ed EB Garamond (OFL), ridotti al solo latino
   icons/          icone vettoriali del menu e il d10 della schermata dadi
@@ -253,12 +293,19 @@ non possono divergere. Aggiungere un tratto significa aggiungere una riga lì.
 Le regole che non stanno sulla scheda ma la governano vivono accanto agli
 schemi: `generations.dart` per i limiti di generazione, `clans.dart` per le
 Discipline e le debolezze di clan delle tre edizioni, `archetypes.dart` per
-gli archetipi di Natura e Carattere.
+gli archetipi di Natura e Carattere. `character_transfer.dart` tiene il
+formato di esportazione e la sua lettura, compresi i controlli sui file che
+non vanno bene.
+
+Chi apre il progetto con **Claude Code** trovi in `CLAUDE.md` la mappa del
+codice, le decisioni prese con le loro ragioni e le trappole già pagate.
 
 I dati vivono in un file JSON per personaggio nella cartella privata
 dell'app, scritti con un piccolo ritardo mentre si tocca la scheda per non
 scrivere su disco a ogni pallino. Nello stesso file finiscono anche le
-sezioni chiuse: sono una scelta che riguarda quel personaggio, non l'app.
+sezioni chiuse: sono una scelta che riguarda quel personaggio, non l'app. Le
+foto stanno a parte, in `foto/`, così il file della scheda resta piccolo e si
+legge in fretta; nell'esportazione invece viaggiano dentro al pacchetto.
 
 ## Test
 
@@ -268,7 +315,8 @@ flutter test --exclude-tags golden   # come in CI
 flutter test --update-goldens        # riallinea le immagini di riferimento
 ```
 
-I test coprono il conteggio dei dadi (compreso l'esempio delle specifiche),
+I test coprono l'esportazione e la rilettura delle schede (file rovinati
+compresi), le foto, il conteggio dei dadi (compreso l'esempio delle specifiche),
 i limiti dei pallini delle tre schede, il salvataggio su disco, la
 navigazione del menu, la regola della scheda che resta aperta e le tabelle
 dei clan — comprese le verifiche che il menu di ogni scheda e la tabella

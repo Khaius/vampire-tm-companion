@@ -64,6 +64,7 @@ class Character {
     Map<String, List<TraitEntry>>? lists,
     Map<String, List<int>>? tracks,
     Set<String>? collapsed,
+    this.photoFile,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) : texts = texts ?? <String, String>{},
@@ -96,6 +97,13 @@ class Character {
   /// scelta che riguarda quel personaggio: chi non usa i Rituali li tiene
   /// chiusi su quella scheda, non su tutte.
   final Set<String> collapsed;
+
+  /// Nome del file della foto nella cartella "foto" dell'app, se c'e'.
+  ///
+  /// Nel JSON viaggia solo il nome: l'immagine sta a parte, cosi' il file
+  /// della scheda resta piccolo e si legge in fretta. Nell'esportazione,
+  /// invece, la foto viene inclusa nel pacchetto.
+  String? photoFile;
 
   final DateTime createdAt;
   DateTime updatedAt;
@@ -149,6 +157,7 @@ class Character {
     ),
     'tracks': tracks,
     if (collapsed.isNotEmpty) 'collapsed': collapsed.toList(),
+    if (photoFile != null) 'photoFile': photoFile,
     'createdAt': createdAt.toIso8601String(),
     'updatedAt': updatedAt.toIso8601String(),
   };
@@ -179,6 +188,7 @@ class Character {
       ),
     ),
     collapsed: (json['collapsed'] as List?)?.map((e) => e.toString()).toSet(),
+    photoFile: json['photoFile'] as String?,
     createdAt: DateTime.tryParse(json['createdAt'] as String? ?? ''),
     updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? ''),
   );
