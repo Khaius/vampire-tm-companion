@@ -169,6 +169,86 @@ void main() {
     });
   });
 
+  /// Sceglie una voce dal menu di un campo, scorrendo se serve.
+  Future<void> pickOption(WidgetTester tester, String option) async {
+    final item = find.text(option).last;
+    await tester.ensureVisible(item);
+    await tester.pumpAndSettle();
+    await tester.tap(item);
+    await tester.pumpAndSettle();
+  }
+
+  group('Clan che precompila la scheda', () {
+    testWidgets('scegliendo il clan arrivano Discipline e debolezza', (
+      tester,
+    ) async {
+      final character = state.createCharacter(SheetType.v20);
+      character.texts['name'] = 'Lucrezia';
+      await openSheet(tester, character);
+
+      await tester.tap(find.byIcon(Icons.lock_outline).last);
+      await tester.pumpAndSettle();
+
+      await tester.tap(fieldOf('Clan:').first);
+      await tester.pumpAndSettle();
+      await pickOption(tester, 'Tremere');
+
+      expect(character.text('clan'), 'Tremere');
+      expect(character.list('discipline').map((e) => e.name), containsAll([
+        'Auspex',
+        'Dominazione',
+        'Taumaturgia',
+      ]));
+      expect(character.text('debolezza'), contains('due sorsi'));
+      // e si vedono sulla scheda, non solo nei dati
+      expect(find.text('Taumaturgia'), findsWidgets);
+    });
+
+    testWidgets('dal menu si può anche scriversi un clan proprio', (
+      tester,
+    ) async {
+      final character = state.createCharacter(SheetType.darkAges);
+      character.texts['name'] = 'Ysabeau';
+      await openSheet(tester, character);
+
+      await tester.tap(find.byIcon(Icons.lock_outline).last);
+      await tester.pumpAndSettle();
+
+      await tester.tap(fieldOf('Clan:').first);
+      await tester.pumpAndSettle();
+      await pickOption(tester, 'Altro...');
+
+      await tester.enterText(find.byType(TextField), 'Gargoyle');
+      await tester.tap(find.text('Conferma'));
+      await tester.pumpAndSettle();
+
+      expect(character.text('clan'), 'Gargoyle');
+      // un clan fuori elenco non precompila niente: non sappiamo cosa sia
+      expect(character.list('discipline').every((e) => e.name.isEmpty), isTrue);
+      expect(character.text('debolezza'), isEmpty);
+    });
+  });
+
+  group('Natura e Carattere fra gli archetipi', () {
+    testWidgets('la Natura si sceglie dall\'elenco', (tester) async {
+      final character = state.createCharacter(SheetType.v20);
+      character.texts['name'] = 'Lucrezia';
+      await openSheet(tester, character);
+
+      await tester.tap(find.byIcon(Icons.lock_outline).last);
+      await tester.pumpAndSettle();
+
+      await tester.tap(fieldOf('Natura:').first);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Architetto'), findsOneWidget);
+      expect(find.text('Visionario'), findsOneWidget);
+      await pickOption(tester, 'Architetto');
+
+      expect(character.text('nature'), 'Architetto');
+    });
+  });
+
   group('Generazione a scelta chiusa', () {
     testWidgets('la si sceglie fra i numeri romani', (tester) async {
       final character = state.createCharacter(SheetType.v20);

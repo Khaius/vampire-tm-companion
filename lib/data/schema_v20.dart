@@ -1,35 +1,25 @@
 import '../models/sheet_type.dart';
+import 'archetypes.dart';
+import 'clans.dart';
 import 'generations.dart';
 import 'sheet_schema.dart';
-
-const _v20Clans = [
-  'Assamiti',
-  'Brujah',
-  'Caitiff',
-  'Followers of Set',
-  'Gangrel',
-  'Giovanni',
-  'Lasombra',
-  'Malkavian',
-  'Nosferatu',
-  'Ravnos',
-  'Salubri',
-  'Toreador',
-  'Tremere',
-  'Tzimisce',
-  'Ventrue',
-];
 
 /// Scheda "Vampiri: La Masquerade — Edizione Speciale 20° Anniversario",
 /// due pagine.
 const v20Schema = SheetSchema(
   type: SheetType.v20,
+  clanWeaknessKey: 'debolezza',
   identity: [
     FieldDef('name', 'Nome'),
-    FieldDef('nature', 'Natura'),
-    FieldDef('clan', 'Clan', suggestions: _v20Clans),
+    FieldDef('nature', 'Natura', options: natureArchetypes, allowCustom: true),
+    FieldDef('clan', 'Clan', options: v20ClanNames, allowCustom: true),
     FieldDef('player', 'Giocatore'),
-    FieldDef('demeanor', 'Carattere'),
+    FieldDef(
+      'demeanor',
+      'Carattere',
+      options: natureArchetypes,
+      allowCustom: true,
+    ),
     FieldDef('generation', 'Generazione', options: generationRomanOptions),
     FieldDef('chronicle', 'Cronaca'),
     FieldDef('concept', 'Profilo'),

@@ -208,6 +208,44 @@ void main() {
     );
   });
 
+  testWidgets('identità dell\'editor, con i menu a tendina', (tester) async {
+    final character = seedV20();
+    await boot(tester);
+    await tester.tap(find.text(character.displayName));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.edit_note));
+    await tester.pumpAndSettle();
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('goldens/13_editor_identita.png'),
+    );
+  });
+
+  testWidgets('il menu dei clan', (tester) async {
+    final character = seedV20();
+    await boot(tester);
+    await tester.tap(find.text(character.displayName));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.lock_outline).last);
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find
+          .descendant(
+            of: find.ancestor(
+              of: find.text('Clan:'),
+              matching: find.byType(Row),
+            ),
+            matching: find.byType(InkWell),
+          )
+          .first,
+    );
+    await tester.pumpAndSettle();
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('goldens/14_menu_clan.png'),
+    );
+  });
+
   testWidgets('dadi con risultato', (tester) async {
     // seme fisso: il golden deve mostrare sempre lo stesso tiro
     DiceRoll.random = Random(1988);

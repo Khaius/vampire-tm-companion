@@ -9,6 +9,7 @@ class FieldDef {
     this.hint,
     this.suggestions = const [],
     this.options = const [],
+    this.allowCustom = false,
   });
   final String key;
   final String label;
@@ -23,6 +24,12 @@ class FieldDef {
   /// Valori di una scelta chiusa: il campo diventa un menu a tendina e non
   /// si scrive a mano (la Generazione, in numeri romani).
   final List<String> options;
+
+  /// Se vero il menu offre anche "Altro...", che apre la tastiera: vale per
+  /// Clan, Natura e Carattere, dove l'elenco ufficiale non puo' esaurire
+  /// quello che a un tavolo puo' venire in mente. La Generazione no: quella
+  /// e' una scelta chiusa davvero.
+  final bool allowCustom;
 
   bool get isSelect => options.isNotEmpty;
 }
@@ -186,6 +193,7 @@ class SheetSchema {
     this.tracks = const [],
     this.textSections = const [],
     this.notes = const [],
+    this.clanWeaknessKey,
   });
 
   final SheetType type;
@@ -201,6 +209,11 @@ class SheetSchema {
 
   /// Righe di promemoria stampate a fondo scheda (es. "Attributi: 7/5/3").
   final List<String> notes;
+
+  /// Dove questa scheda scrive la debolezza di clan: la 5a edizione ha un
+  /// riquadro suo ("Debolezza di Clan"), le altre due la mettono insieme
+  /// alle debolezze generiche.
+  final String? clanWeaknessKey;
 
   int get traitMax => type.traitMax;
 

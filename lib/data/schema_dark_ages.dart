@@ -1,25 +1,8 @@
 import '../models/sheet_type.dart';
+import 'archetypes.dart';
+import 'clans.dart';
 import 'generations.dart';
 import 'sheet_schema.dart';
-
-const _darkAgesClans = [
-  'Assamiti',
-  'Baali',
-  'Brujah',
-  'Cappadoci',
-  'Followers of Set',
-  'Gangrel',
-  'Lasombra',
-  'Lhiannan',
-  'Malkavian',
-  'Nosferatu',
-  'Ravnos',
-  'Salubri',
-  'Toreador',
-  'Tremere',
-  'Tzimisce',
-  'Ventrue',
-];
 
 /// Scheda "Vampiri: I Secoli Bui — Edizione Speciale 20° Anniversario".
 ///
@@ -27,12 +10,18 @@ const _darkAgesClans = [
 /// esattamente come sono stampati sul PDF originale.
 const darkAgesSchema = SheetSchema(
   type: SheetType.darkAges,
+  clanWeaknessKey: 'debolezza',
   identity: [
     FieldDef('name', 'Nome'),
-    FieldDef('nature', 'Natura'),
-    FieldDef('clan', 'Clan', suggestions: _darkAgesClans),
+    FieldDef('nature', 'Natura', options: natureArchetypes, allowCustom: true),
+    FieldDef('clan', 'Clan', options: darkAgesClanNames, allowCustom: true),
     FieldDef('player', 'Giocatore'),
-    FieldDef('demeanor', 'Carattere'),
+    FieldDef(
+      'demeanor',
+      'Carattere',
+      options: natureArchetypes,
+      allowCustom: true,
+    ),
     FieldDef('generation', 'Generazione', options: generationRomanOptions),
     FieldDef('chronicle', 'Cronaca'),
     FieldDef('concept', 'Concetto'),
@@ -194,9 +183,14 @@ const darkAgesSchema = SheetSchema(
       suggestions: [
         'Animalismo',
         'Auspex',
+        'Chimerismo',
+        'Daimoinon',
+        'Dementazione',
         'Dominazione',
         'Mortis',
+        'Obeah',
         'Obtenebrazione',
+        'Ogham',
         'Oscurazione',
         'Potenza',
         'Presenza',
