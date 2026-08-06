@@ -63,12 +63,14 @@ class Character {
     Map<String, int>? dots,
     Map<String, List<TraitEntry>>? lists,
     Map<String, List<int>>? tracks,
+    Set<String>? collapsed,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) : texts = texts ?? <String, String>{},
        dots = dots ?? <String, int>{},
        lists = lists ?? <String, List<TraitEntry>>{},
        tracks = tracks ?? <String, List<int>>{},
+       collapsed = collapsed ?? <String>{},
        createdAt = createdAt ?? DateTime.now(),
        updatedAt = updatedAt ?? DateTime.now();
 
@@ -88,8 +90,21 @@ class Character {
   /// (0 = vuota, 1/2/3 = livelli di riempimento a seconda del tracker).
   final Map<String, List<int>> tracks;
 
+  /// Le sezioni chiuse a fisarmonica, per chiave di sezione.
+  ///
+  /// Sta insieme alla scheda e non alle preferenze dell'app perche' e' una
+  /// scelta che riguarda quel personaggio: chi non usa i Rituali li tiene
+  /// chiusi su quella scheda, non su tutte.
+  final Set<String> collapsed;
+
   final DateTime createdAt;
   DateTime updatedAt;
+
+  bool isCollapsed(String key) => collapsed.contains(key);
+
+  void toggleCollapsed(String key) {
+    if (!collapsed.remove(key)) collapsed.add(key);
+  }
 
   String get displayName {
     final n = texts['name']?.trim() ?? '';
@@ -133,6 +148,7 @@ class Character {
       (k, v) => MapEntry(k, v.map((e) => e.toJson()).toList()),
     ),
     'tracks': tracks,
+    if (collapsed.isNotEmpty) 'collapsed': collapsed.toList(),
     'createdAt': createdAt.toIso8601String(),
     'updatedAt': updatedAt.toIso8601String(),
   };
@@ -162,6 +178,7 @@ class Character {
         (v as List? ?? []).map((e) => (e as num?)?.toInt() ?? 0).toList(),
       ),
     ),
+    collapsed: (json['collapsed'] as List?)?.map((e) => e.toString()).toSet(),
     createdAt: DateTime.tryParse(json['createdAt'] as String? ?? ''),
     updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? ''),
   );

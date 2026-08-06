@@ -42,25 +42,54 @@ class _CharacterEditPageState extends State<CharacterEditPage> {
     if (character != null) {
       _character = character;
       _schema = schemaFor(character.type);
-      _prepareSlots(character);
+      _dropEmptyRows(character);
     }
   }
 
-  /// Prepara le righe stampate sulla scheda cosi' l'editor mostra da subito
-  /// lo stesso numero di spazi del cartaceo.
-  void _prepareSlots(Character character) {
-    for (final section in _schema.lists) {
-      final entries = character.list(section.key);
-      while (entries.length < section.slots) {
-        entries.add(TraitEntry());
-      }
+  final ScrollController _scroll = ScrollController();
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    final character = _character;
+    if (character != null) {
+      _state.flushAndNotifyLater(character);
     }
-    for (final group in _schema.abilities) {
-      if (group.extraSlots == 0) continue;
-      final entries = character.list(group.extraListKey);
-      while (entries.length < group.extraSlots) {
-        entries.add(TraitEntry());
-      }
+    super.dispose();
+  }
+
+  /// Una sezione del modulo, apribile e chiudibile toccandone il titolo.
+  /// Le sezioni chiuse restano tali anche riaprendo la scheda domani.
+  Widget _section(
+    String key,
+    String title, {
+    String? subtitle,
+    required List<Widget> children,
+  }) {
+    final character = _character!;
+    return _Section(
+      title: title,
+      subtitle: subtitle,
+      collapsed: character.isCollapsed(key),
+      onToggle: () {
+        setState(() => character.toggleCollapsed(key));
+        _save();
+      },
+      children: children,
+    );
+  }
+
+  /// Le sezioni a elenco partono vuote: si aggiunge una riga quando serve,
+  /// invece di trovarne sette in bianco da saltare.
+  ///
+  /// All'apertura si buttano via le righe vuote rimaste nelle schede fatte
+  /// con le versioni precedenti, che invece le stampavano tutte.
+  void _dropEmptyRows(Character character) {
+    for (final key in [
+      for (final section in _schema.lists) section.key,
+      for (final group in _schema.abilities) group.extraListKey,
+    ]) {
+      character.list(key).removeWhere((entry) => entry.isEmpty);
     }
   }
 
@@ -91,20 +120,27 @@ class _CharacterEditPageState extends State<CharacterEditPage> {
   /// Il massimo davvero utilizzabile per un tratto.
   int _allowedFor(int sheetMax) => effectiveTraitMax(sheetMax, _generation);
 
+  /// Quante caselle disegnare di un tracker: solo la riserva di sangue si
+  /// accorcia, e solo se la generazione ne concede meno di quante la scheda
+  /// ne stampi. Volontà e Salute non dipendono dalla generazione.
+  int? _visibleBoxes(TrackDef track) =>
+      track.key == 'sangue' ? _generation?.bloodPool : null;
+
+  /// Vero se ci sono caselle segnate oltre a quelle che si vedono.
+  bool _hiddenMarks(Character character, TrackDef track) {
+    final visible = _visibleBoxes(track);
+    if (visible == null || visible >= track.length) return false;
+    return character
+        .track(track.key, track.length)
+        .skip(visible)
+        .any((state) => state > 0);
+  }
+
   void _save() {
     final character = _character;
     if (character == null) return;
     character.updatedAt = DateTime.now();
     _state.characterRepository.saveDebounced(character);
-  }
-
-  @override
-  void dispose() {
-    final character = _character;
-    if (character != null) {
-      _state.flushAndNotifyLater(character);
-    }
-    super.dispose();
   }
 
   @override
@@ -165,246 +201,271 @@ class _CharacterEditPageState extends State<CharacterEditPage> {
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(14, 8, 14, 40),
-        children: [
-          if (widget.isNew)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 14),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: VtmColors.surface,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFF3A2C2E)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.info_outline, color: VtmColors.gold),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Compila quello che vuoi: puoi lasciare tutto vuoto e '
-                        'riprendere più tardi. I pallini vanno da 0 a '
-                        '${_schema.traitMax}.',
-                        style: const TextStyle(
-                          color: VtmColors.ash,
-                          fontSize: 14,
-                          height: 1.3,
+      body: Scrollbar(
+        controller: _scroll,
+        thumbVisibility: true,
+        interactive: true,
+        child: ListView(
+          controller: _scroll,
+          padding: const EdgeInsets.fromLTRB(14, 8, 20, 40),
+          children: [
+            if (widget.isNew)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: VtmColors.surface,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFF3A2C2E)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.info_outline, color: VtmColors.gold),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'Compila quello che vuoi: puoi lasciare tutto vuoto e '
+                          'riprendere più tardi. I pallini vanno da 0 a '
+                          '${_schema.traitMax}.',
+                          style: const TextStyle(
+                            color: VtmColors.ash,
+                            fontSize: 14,
+                            height: 1.3,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          _Section(
-            title: 'Identità',
-            children: [
-              for (final field in _schema.identity)
-                _TextRow(
-                  key: ValueKey('id_${field.key}_$_prefillEpoch'),
-                  field: field,
-                  value: character.text(field.key),
-                  onChanged: (v) {
-                    character.texts[field.key] = v;
-                    // i menu a tendina si ridisegnano sul valore salvato;
-                    // i campi liberi no, o perderebbero il cursore
-                    if (field.isSelect) setState(() {});
-                    _save();
-                    if (field.key == 'clan') _applyClan(character, v);
-                  },
-                ),
-            ],
-          ),
-          _Section(
-            title: 'Attributi',
-            children: [
-              for (final group in _schema.attributes) ...[
-                _GroupLabel(group.title),
-                for (final trait in group.traits)
-                  DotStepper(
-                    label: trait.label,
-                    value: character.dot(trait.key),
-                    max: _schema.traitMax,
-                    allowed: _allowedFor(_schema.traitMax),
-                    onChanged: (v) {
-                      setState(() => character.dots[trait.key] = v);
-                      _save();
-                    },
-                  ),
-              ],
-            ],
-          ),
-          _Section(
-            title: 'Abilità',
-            children: [
-              for (final group in _schema.abilities) ...[
-                _GroupLabel(group.title),
-                for (final trait in group.traits)
-                  DotStepper(
-                    label: trait.label,
-                    value: character.dot(trait.key),
-                    max: _schema.traitMax,
-                    allowed: _allowedFor(_schema.traitMax),
-                    trailing: trait.specialtyKey == null
-                        ? null
-                        : _SpecialtyButton(
-                            value: character.text(trait.specialtyKey!),
-                            label: trait.label,
-                            onChanged: (v) {
-                              setState(
-                                () => character.texts[trait.specialtyKey!] = v,
-                              );
-                              _save();
-                            },
-                          ),
-                    onChanged: (v) {
-                      setState(() => character.dots[trait.key] = v);
-                      _save();
-                    },
-                  ),
-                if (group.extraSlots > 0)
-                  ..._extraAbilityRows(character, group),
-              ],
-            ],
-          ),
-          if (_schema.virtues.isNotEmpty)
-            _Section(
-              title: 'Virtù',
+            _section(
+              'identita',
+              'Identità',
               children: [
-                for (final virtue in _schema.virtues)
-                  DotStepper(
-                    label: virtue.label,
-                    value: character.dot(virtue.key),
-                    max: _schema.virtueMax,
-                    allowed: _allowedFor(_schema.virtueMax),
+                for (final field in _schema.identity)
+                  _TextRow(
+                    key: ValueKey('id_${field.key}_$_prefillEpoch'),
+                    field: field,
+                    value: character.text(field.key),
                     onChanged: (v) {
-                      setState(() => character.dots[virtue.key] = v);
+                      character.texts[field.key] = v;
+                      // i menu a tendina si ridisegnano sul valore salvato;
+                      // i campi liberi no, o perderebbero il cursore
+                      if (field.isSelect) setState(() {});
                       _save();
+                      if (field.key == 'clan') _applyClan(character, v);
                     },
                   ),
               ],
             ),
-          for (final section in _schema.lists)
-            _Section(
-              title: section.title,
-              subtitle: section.hint,
+            _section(
+              'attributi',
+              'Attributi',
               children: [
-                _ListSectionEditor(
-                  key: ValueKey('list_${section.key}_$_prefillEpoch'),
-                  section: section,
-                  character: character,
-                  allowedDots: section.limitedByGeneration
-                      ? _allowedFor(section.dotMax)
-                      : section.dotMax,
-                  onChanged: _save,
-                ),
-              ],
-            ),
-          _Section(
-            title: 'Tracker',
-            children: [
-              for (final track in _schema.tracks) ...[
-                _GroupLabel(
-                  track.note == null
-                      ? track.title
-                      : '${track.title} (${track.note})',
-                ),
-                if (track.kind == TrackKind.dots)
-                  DotStepper(
-                    label: track.title,
-                    value: character.dot(track.key),
-                    max: track.length,
-                    onChanged: (v) {
-                      setState(() => character.dots[track.key] = v);
-                      _save();
-                    },
-                  )
-                else if (track.rowLabels.isNotEmpty)
-                  HealthLevels(
-                    track: track,
-                    states: character.track(track.key, track.length),
-                    color: VtmColors.ash,
-                    labelStyle: const TextStyle(
-                      fontSize: 15,
-                      color: VtmColors.bone,
+                for (final group in _schema.attributes) ...[
+                  _GroupLabel(group.title),
+                  for (final trait in group.traits)
+                    DotStepper(
+                      label: trait.label,
+                      value: character.dot(trait.key),
+                      max: _schema.traitMax,
+                      allowed: _allowedFor(_schema.traitMax),
+                      onChanged: (v) {
+                        setState(() => character.dots[trait.key] = v);
+                        _save();
+                      },
                     ),
-                    onChanged: (i, v) {
-                      setState(() {
-                        character.track(track.key, track.length)[i] = v;
-                      });
-                      _save();
-                    },
-                  )
-                else
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: BoxTrack(
+                ],
+              ],
+            ),
+            _section(
+              'abilita',
+              'Abilità',
+              children: [
+                for (final group in _schema.abilities) ...[
+                  _GroupLabel(group.title),
+                  for (final trait in group.traits)
+                    DotStepper(
+                      label: trait.label,
+                      value: character.dot(trait.key),
+                      max: _schema.traitMax,
+                      allowed: _allowedFor(_schema.traitMax),
+                      trailing: trait.specialtyKey == null
+                          ? null
+                          : _SpecialtyButton(
+                              value: character.text(trait.specialtyKey!),
+                              label: trait.label,
+                              onChanged: (v) {
+                                setState(
+                                  () =>
+                                      character.texts[trait.specialtyKey!] = v,
+                                );
+                                _save();
+                              },
+                            ),
+                      onChanged: (v) {
+                        setState(() => character.dots[trait.key] = v);
+                        _save();
+                      },
+                    ),
+                  if (group.extraSlots > 0)
+                    ..._extraAbilityRows(character, group),
+                ],
+              ],
+            ),
+            if (_schema.virtues.isNotEmpty)
+              _section(
+                'virtu',
+                'Virtù',
+                children: [
+                  for (final virtue in _schema.virtues)
+                    DotStepper(
+                      label: virtue.label,
+                      value: character.dot(virtue.key),
+                      max: _schema.virtueMax,
+                      allowed: _allowedFor(_schema.virtueMax),
+                      onChanged: (v) {
+                        setState(() => character.dots[virtue.key] = v);
+                        _save();
+                      },
+                    ),
+                ],
+              ),
+            for (final section in _schema.lists)
+              _section(
+                'list:${section.key}',
+                section.title,
+                subtitle: section.hint,
+                children: [
+                  _ListSectionEditor(
+                    key: ValueKey('list_${section.key}_$_prefillEpoch'),
+                    section: section,
+                    character: character,
+                    allowedDots: section.limitedByGeneration
+                        ? _allowedFor(section.dotMax)
+                        : section.dotMax,
+                    onChanged: _save,
+                  ),
+                ],
+              ),
+            _section(
+              'tracker',
+              'Tracker',
+              children: [
+                for (final track in _schema.tracks) ...[
+                  _GroupLabel(
+                    track.note == null
+                        ? track.title
+                        : '${track.title} (${track.note})',
+                  ),
+                  if (track.kind == TrackKind.dots)
+                    DotStepper(
+                      label: track.title,
+                      value: character.dot(track.key),
+                      max: track.length,
+                      onChanged: (v) {
+                        setState(() => character.dots[track.key] = v);
+                        _save();
+                      },
+                    )
+                  else if (track.rowLabels.isNotEmpty)
+                    HealthLevels(
+                      track: track,
                       states: character.track(track.key, track.length),
-                      maxState: track.maxState,
-                      perRow: track.perRow,
                       color: VtmColors.ash,
-                      filledFirst: track.firstStateFilled,
-                      // la riserva di sangue dipende dalla generazione
-                      allowed: track.key == 'sangue'
-                          ? _generation?.bloodPool
-                          : null,
+                      labelStyle: const TextStyle(
+                        fontSize: 15,
+                        color: VtmColors.bone,
+                      ),
                       onChanged: (i, v) {
                         setState(() {
                           character.track(track.key, track.length)[i] = v;
                         });
                         _save();
                       },
-                    ),
-                  ),
-                if (track.stateLegend.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2, bottom: 6),
-                    child: Text(
-                      'Tocca per cambiare stato · ${track.stateLegend.join(" · ")}',
-                      style: const TextStyle(
+                    )
+                  else
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: BoxTrack(
+                        states: character.track(track.key, track.length),
+                        maxState: track.maxState,
+                        perRow: track.perRow,
                         color: VtmColors.ash,
-                        fontSize: 12.5,
+                        filledFirst: track.firstStateFilled,
+                        // la riserva di sangue dipende dalla generazione: le
+                        // caselle in piu' della scheda non vengono disegnate
+                        visible: _visibleBoxes(track),
+                        onChanged: (i, v) {
+                          setState(() {
+                            character.track(track.key, track.length)[i] = v;
+                          });
+                          _save();
+                        },
                       ),
                     ),
-                  ),
-              ],
-            ],
-          ),
-          for (final section in _schema.textSections)
-            _Section(
-              title: section.title,
-              children: [
-                if (section.fields != null)
-                  for (final field in section.fields!)
-                    _TextRow(
-                      key: ValueKey('txt_${field.key}_$_prefillEpoch'),
-                      field: field,
-                      value: character.text(field.key),
-                      onChanged: (v) {
-                        character.texts[field.key] = v;
-                        _save();
-                      },
-                    )
-                else
-                  _TextRow(
-                    key: ValueKey('txt_${section.key}_$_prefillEpoch'),
-                    field: FieldDef(
-                      section.key,
-                      section.title,
-                      multiline: true,
+                  if (_hiddenMarks(character, track))
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Text(
+                        'Oltre il limite della generazione ci sono caselle '
+                        'segnate: non spariscono, tornano se cambi generazione.',
+                        style: const TextStyle(
+                          color: VtmColors.ash,
+                          fontSize: 12.5,
+                        ),
+                      ),
                     ),
-                    value: character.text(section.key),
-                    minLines: section.lines,
-                    onChanged: (v) {
-                      character.texts[section.key] = v;
-                      _save();
-                    },
-                  ),
+                  if (track.stateLegend.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2, bottom: 6),
+                      child: Text(
+                        'Tocca per cambiare stato · ${track.stateLegend.join(" · ")}',
+                        style: const TextStyle(
+                          color: VtmColors.ash,
+                          fontSize: 12.5,
+                        ),
+                      ),
+                    ),
+                ],
               ],
             ),
-        ],
+            for (final section in _schema.textSections)
+              _section(
+                'text:${section.key}',
+                section.title,
+                children: [
+                  if (section.fields != null)
+                    for (final field in section.fields!)
+                      _TextRow(
+                        key: ValueKey('txt_${field.key}_$_prefillEpoch'),
+                        field: field,
+                        value: character.text(field.key),
+                        onChanged: (v) {
+                          character.texts[field.key] = v;
+                          _save();
+                        },
+                      )
+                  else
+                    _TextRow(
+                      key: ValueKey('txt_${section.key}_$_prefillEpoch'),
+                      field: FieldDef(
+                        section.key,
+                        section.title,
+                        multiline: true,
+                      ),
+                      value: character.text(section.key),
+                      minLines: section.lines,
+                      onChanged: (v) {
+                        character.texts[section.key] = v;
+                        _save();
+                      },
+                    ),
+                ],
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -462,11 +523,19 @@ class _CharacterEditPageState extends State<CharacterEditPage> {
 }
 
 class _Section extends StatelessWidget {
-  const _Section({required this.title, required this.children, this.subtitle});
+  const _Section({
+    required this.title,
+    required this.children,
+    required this.collapsed,
+    required this.onToggle,
+    this.subtitle,
+  });
 
   final String title;
   final String? subtitle;
   final List<Widget> children;
+  final bool collapsed;
+  final VoidCallback onToggle;
 
   @override
   Widget build(BuildContext context) {
@@ -478,17 +547,34 @@ class _Section extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title.toUpperCase(),
-                style: const TextStyle(
-                  fontFamily: 'Cinzel',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.6,
-                  color: VtmColors.gold,
+              // tutto il titolo e' l'interruttore: e' un bersaglio grande,
+              // si prende col pollice senza guardare
+              InkWell(
+                onTap: onToggle,
+                borderRadius: BorderRadius.circular(6),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title.toUpperCase(),
+                        style: const TextStyle(
+                          fontFamily: 'Cinzel',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.6,
+                          color: VtmColors.gold,
+                        ),
+                      ),
+                    ),
+                    Icon(
+                      collapsed ? Icons.expand_more : Icons.expand_less,
+                      size: 22,
+                      color: VtmColors.gold,
+                    ),
+                  ],
                 ),
               ),
-              if (subtitle != null)
+              if (subtitle != null && !collapsed)
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
@@ -496,8 +582,7 @@ class _Section extends StatelessWidget {
                     style: const TextStyle(color: VtmColors.ash, fontSize: 13),
                   ),
                 ),
-              const SizedBox(height: 10),
-              ...children,
+              if (!collapsed) ...[const SizedBox(height: 10), ...children],
             ],
           ),
         ),
@@ -826,15 +911,14 @@ class _ListSectionEditorState extends State<_ListSectionEditor> {
                               },
                             ),
                     ),
-                    if (entries.length > section.slots)
-                      IconButton(
-                        icon: const Icon(Icons.remove_circle_outline, size: 20),
-                        tooltip: 'Rimuovi riga',
-                        onPressed: () {
-                          setState(() => entries.removeAt(i));
-                          widget.onChanged();
-                        },
-                      ),
+                    IconButton(
+                      icon: const Icon(Icons.remove_circle_outline, size: 20),
+                      tooltip: 'Rimuovi riga',
+                      onPressed: () {
+                        setState(() => entries.removeAt(i));
+                        widget.onChanged();
+                      },
+                    ),
                   ],
                 ),
                 if (section.hasDots)

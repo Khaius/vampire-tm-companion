@@ -194,11 +194,10 @@ void main() {
       await pickOption(tester, 'Tremere');
 
       expect(character.text('clan'), 'Tremere');
-      expect(character.list('discipline').map((e) => e.name), containsAll([
-        'Auspex',
-        'Dominazione',
-        'Taumaturgia',
-      ]));
+      expect(
+        character.list('discipline').map((e) => e.name),
+        containsAll(['Auspex', 'Dominazione', 'Taumaturgia']),
+      );
       expect(character.text('debolezza'), contains('due sorsi'));
       // e si vedono sulla scheda, non solo nei dati
       expect(find.text('Taumaturgia'), findsWidgets);

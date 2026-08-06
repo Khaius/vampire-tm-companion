@@ -202,16 +202,29 @@ class SheetMasthead extends StatelessWidget {
 
 /// L'intestazione di sezione con i losanghi ai lati, come sulle schede.
 class SheetBanner extends StatelessWidget {
-  const SheetBanner(this.title, {super.key, required this.type});
+  const SheetBanner(
+    this.title, {
+    super.key,
+    required this.type,
+    this.collapsed = false,
+    this.onToggle,
+  });
 
   final String title;
   final SheetType type;
+
+  /// Se la sezione sotto e' chiusa: cambia solo il segno accanto al titolo.
+  final bool collapsed;
+
+  /// Toccando la fascia si apre e si chiude la sezione.
+  final VoidCallback? onToggle;
 
   @override
   Widget build(BuildContext context) {
     final medieval = type == SheetType.darkAges;
     final color = medieval ? type.accent : VtmColors.ink;
-    return Padding(
+    final ink = medieval ? const Color(0xFF3A1416) : VtmColors.ink;
+    final banner = Padding(
       padding: const EdgeInsets.only(top: 14, bottom: 8),
       child: Row(
         children: [
@@ -225,11 +238,23 @@ class SheetBanner extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 10),
               child: FittedBox(
                 fit: BoxFit.scaleDown,
-                child: Text(
-                  title.toUpperCase(),
-                  style: SheetTextStyles.heading.copyWith(
-                    color: medieval ? const Color(0xFF3A1416) : VtmColors.ink,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title.toUpperCase(),
+                      style: SheetTextStyles.heading.copyWith(color: ink),
+                    ),
+                    if (onToggle != null)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 6),
+                        child: Icon(
+                          collapsed ? Icons.expand_more : Icons.expand_less,
+                          size: 18,
+                          color: ink,
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),
@@ -239,6 +264,12 @@ class SheetBanner extends StatelessWidget {
           ),
         ],
       ),
+    );
+    if (onToggle == null) return banner;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onToggle,
+      child: banner,
     );
   }
 }

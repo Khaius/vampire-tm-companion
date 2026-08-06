@@ -42,6 +42,8 @@ class _SheetPageState extends State<SheetPage> {
   /// la si tiene aperta.
   bool _locked = true;
 
+  final ScrollController _scroll = ScrollController();
+
   @override
   void initState() {
     super.initState();
@@ -60,6 +62,23 @@ class _SheetPageState extends State<SheetPage> {
   /// sulla scheda e quelli concessi dalla generazione.
   int _allowedFor(int sheetMax) => effectiveTraitMax(sheetMax, _generation);
 
+  /// Quante caselle disegnare di un tracker: solo la riserva di sangue si
+  /// accorcia con la generazione. Volontà e Salute non c'entrano.
+  int? _visibleBoxes(TrackDef track) =>
+      track.key == 'sangue' ? _generation?.bloodPool : null;
+
+  /// Vero se restano segnate caselle oltre a quelle che si vedono: capita
+  /// cambiando generazione a personaggio fatto, e va detto invece di far
+  /// sparire il dato in silenzio.
+  bool _hiddenMarks(Character character, TrackDef track) {
+    final visible = _visibleBoxes(track);
+    if (visible == null || visible >= track.length) return false;
+    return character
+        .track(track.key, track.length)
+        .skip(visible)
+        .any((state) => state > 0);
+  }
+
   void _save() {
     final character = _character;
     if (character == null) return;
@@ -69,6 +88,7 @@ class _SheetPageState extends State<SheetPage> {
 
   @override
   void dispose() {
+    _scroll.dispose();
     final character = _character;
     // Uscendo dalla scheda si scrive subito su disco e si aggiorna la lista
     // al frame successivo, quando l'albero non e' piu' bloccato.
@@ -176,36 +196,45 @@ class _SheetPageState extends State<SheetPage> {
             // Il telefono resta su una colonna; tablet e schermi larghi
             // recuperano l'impaginazione a colonne del cartaceo.
             final wide = constraints.maxWidth >= 1000;
-            return ListView(
-              padding: const EdgeInsets.fromLTRB(10, 10, 10, 26),
-              children: [
-                _LockBanner(
-                  locked: _locked,
-                  onToggle: () => setState(() => _locked = !_locked),
-                ),
-                const SizedBox(height: 10),
-                SheetPaper(
-                  type: type,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: _buildSheet(character, type, wide),
+            return Scrollbar(
+              controller: _scroll,
+              thumbVisibility: true,
+              interactive: true,
+              child: ListView(
+                controller: _scroll,
+                padding: const EdgeInsets.fromLTRB(10, 10, 16, 26),
+                children: [
+                  _LockBanner(
+                    locked: _locked,
+                    onToggle: () => setState(() => _locked = !_locked),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 14),
-                  child: Text(
-                    _locked
-                        ? 'Scheda bloccata: puoi sfogliarla senza rischiare di '
-                              'cambiarla. Tocca il nome di un tratto per tirare '
-                              'i dadi.'
-                        : 'Tocca i pallini e le caselle per aggiornarli, tocca '
-                              'una riga per scrivere, tocca il nome di un tratto '
-                              'per tirare i dadi.',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: VtmColors.ash, fontSize: 13),
+                  const SizedBox(height: 10),
+                  SheetPaper(
+                    type: type,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: _buildSheet(character, type, wide),
+                    ),
                   ),
-                ),
-              ],
+                  Padding(
+                    padding: const EdgeInsets.only(top: 14),
+                    child: Text(
+                      _locked
+                          ? 'Scheda bloccata: puoi sfogliarla senza rischiare di '
+                                'cambiarla. Tocca il nome di un tratto per tirare '
+                                'i dadi.'
+                          : 'Tocca i pallini e le caselle per aggiornarli, tocca '
+                                'una riga per scrivere, tocca il nome di un tratto '
+                                'per tirare i dadi.',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: VtmColors.ash,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             );
           },
         ),
@@ -215,35 +244,93 @@ class _SheetPageState extends State<SheetPage> {
 
   // ------------------------------------------------------------- struttura
 
+  /// Una fascia col suo blocco, che si apre e si chiude toccando il titolo.
+  ///
+  /// Le chiavi sono le stesse dell'editor: chiudendo i Rituali qui restano
+  /// chiusi anche di la', ed e' quello che ci si aspetta.
+  List<Widget> _band(
+    Character character,
+    SheetType type,
+    String key,
+    String title,
+    Widget Function() body,
+  ) {
+    final collapsed = character.isCollapsed(key);
+    return [
+      SheetBanner(
+        title,
+        type: type,
+        collapsed: collapsed,
+        onToggle: () {
+          setState(() => character.toggleCollapsed(key));
+          _save();
+        },
+      ),
+      if (!collapsed) body(),
+    ];
+  }
+
   List<Widget> _buildSheet(Character character, SheetType type, bool wide) {
     return [
       SheetMasthead(type: type),
       const SizedBox(height: 14),
       _identityBlock(character, wide),
-      SheetBanner('Attributi', type: type),
-      _traitColumns(character, _schema.attributes, wide, _schema.traitMax),
-      SheetBanner(type == SheetType.v5 ? 'Skills' : 'Abilità', type: type),
-      _traitColumns(
+      ..._band(
         character,
-        _schema.abilities,
-        wide,
-        _schema.traitMax,
-        showColumnTitles: true,
+        type,
+        'attributi',
+        'Attributi',
+        () => _traitColumns(
+          character,
+          _schema.attributes,
+          wide,
+          _schema.traitMax,
+        ),
       ),
-      if (_schema.virtues.isNotEmpty) ...[
-        SheetBanner('Virtù', type: type),
-        _virtuesBlock(character),
-      ],
-      for (final section in _schema.lists) ...[
-        SheetBanner(section.title, type: type),
-        _listBlock(character, section, wide),
-      ],
-      SheetBanner('Vantaggi e Stato', type: type),
-      _tracksBlock(character, type, wide),
-      for (final section in _schema.textSections) ...[
-        SheetBanner(section.title, type: type),
-        _textBlock(character, section, wide),
-      ],
+      ..._band(
+        character,
+        type,
+        'abilita',
+        type == SheetType.v5 ? 'Skills' : 'Abilità',
+        () => _traitColumns(
+          character,
+          _schema.abilities,
+          wide,
+          _schema.traitMax,
+          showColumnTitles: true,
+        ),
+      ),
+      if (_schema.virtues.isNotEmpty)
+        ..._band(
+          character,
+          type,
+          'virtu',
+          'Virtù',
+          () => _virtuesBlock(character),
+        ),
+      for (final section in _schema.lists)
+        ..._band(
+          character,
+          type,
+          'list:${section.key}',
+          section.title,
+          () => _listBlock(character, section, wide),
+        ),
+      ..._band(
+        character,
+        type,
+        'tracker',
+        'Vantaggi e Stato',
+        () => _tracksBlock(character, type, wide),
+      ),
+      for (final section in _schema.textSections)
+        ..._band(
+          character,
+          type,
+          'text:${section.key}',
+          section.title,
+          () => _textBlock(character, section, wide),
+        ),
       for (final note in _schema.notes)
         Padding(
           padding: const EdgeInsets.only(top: 16),
@@ -318,25 +405,41 @@ class _SheetPageState extends State<SheetPage> {
                       ),
               ),
             for (final entry in character.list(group.extraListKey))
-              _TraitLine(
-                label: entry.name.isEmpty ? '—' : entry.name,
-                value: entry.value,
-                max: max,
-                allowed: _allowedFor(max),
-                onRoll: entry.name.isEmpty
-                    ? null
-                    : () => _quickRoll(entry.name, entry.value),
-                onChanged: _locked
-                    ? null
-                    : (v) {
-                        setState(() => entry.value = v);
-                        _save();
-                      },
+              if (!entry.isEmpty)
+                _TraitLine(
+                  label: entry.name.isEmpty ? '—' : entry.name,
+                  value: entry.value,
+                  max: max,
+                  allowed: _allowedFor(max),
+                  onRoll: entry.name.isEmpty
+                      ? null
+                      : () => _quickRoll(entry.name, entry.value),
+                  onChanged: _locked
+                      ? null
+                      : (v) {
+                          setState(() => entry.value = v);
+                          _save();
+                        },
+                ),
+            if (!_locked && group.extraSlots > 0)
+              _AddRow(
+                label: 'riga',
+                onTap: () => _addExtraTrait(character, group),
               ),
           ],
         ),
     ];
     return _Grid(columns: wide ? 3 : 1, gap: 18, children: columns);
+  }
+
+  /// Aggiunge una riga libera in fondo a una colonna di Abilità.
+  Future<void> _addExtraTrait(Character character, TraitGroup group) async {
+    final name = await promptForText(context, title: group.title, initial: '');
+    if (name == null || name.trim().isEmpty) return;
+    setState(
+      () => character.list(group.extraListKey).add(TraitEntry(name: name)),
+    );
+    _save();
   }
 
   Widget _virtuesBlock(Character character) {
@@ -362,18 +465,9 @@ class _SheetPageState extends State<SheetPage> {
 
   Widget _listBlock(Character character, ListSection section, bool wide) {
     final entries = character.list(section.key);
-    final visible = <TraitEntry>[];
-    for (var i = 0; i < entries.length; i++) {
-      // Si mostrano le righe stampate sulla scheda piu' tutto cio' che
-      // l'utente ha effettivamente scritto.
-      if (i < section.slots || !entries[i].isEmpty) visible.add(entries[i]);
-    }
-    if (visible.isEmpty) {
-      for (var i = 0; i < section.slots; i++) {
-        entries.add(TraitEntry());
-        visible.add(entries.last);
-      }
-    }
+    // Si mostra solo quello che c'e' scritto: niente righe in bianco da
+    // saltare con gli occhi. Le altre si aggiungono quando servono.
+    final visible = entries.where((entry) => !entry.isEmpty).toList();
 
     Widget rowFor(TraitEntry entry) {
       return Padding(
@@ -499,11 +593,38 @@ class _SheetPageState extends State<SheetPage> {
 
     final useTwoColumns =
         wide || (section.lineSlots == 0 && visible.length > 6);
-    return _Grid(
-      columns: useTwoColumns ? 2 : 1,
-      gap: 14,
-      children: [for (final entry in visible) rowFor(entry)],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (visible.isEmpty && _locked)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 2),
+            child: Text('—', style: SheetTextStyles.small),
+          ),
+        _Grid(
+          columns: useTwoColumns ? 2 : 1,
+          gap: 14,
+          children: [for (final entry in visible) rowFor(entry)],
+        ),
+        if (!_locked) _AddRow(onTap: () => _addListEntry(character, section)),
+      ],
     );
+  }
+
+  /// Aggiunge una voce a una sezione dalla scheda disegnata.
+  ///
+  /// Il nome si chiede subito: una riga senza nome sarebbe di nuovo una riga
+  /// in bianco, che e' proprio quello che si voleva togliere. Se si annulla,
+  /// la riga non nasce.
+  Future<void> _addListEntry(Character character, ListSection section) async {
+    final name = await promptForText(
+      context,
+      title: section.nameLabel,
+      initial: '',
+    );
+    if (name == null || name.trim().isEmpty) return;
+    setState(() => character.list(section.key).add(TraitEntry(name: name)));
+    _save();
   }
 
   Widget _tracksBlock(Character character, SheetType type, bool wide) {
@@ -556,10 +677,8 @@ class _SheetPageState extends State<SheetPage> {
                   perRow: track.perRow,
                   filledFirst: track.firstStateFilled,
                   // La riserva di sangue dipende dalla generazione: le
-                  // caselle oltre restano stampate ma spente.
-                  allowed: track.key == 'sangue'
-                      ? _generation?.bloodPool
-                      : null,
+                  // caselle in piu' della scheda non si disegnano proprio.
+                  visible: _visibleBoxes(track),
                   onChanged: _locked
                       ? null
                       : (i, v) {
@@ -569,6 +688,15 @@ class _SheetPageState extends State<SheetPage> {
                           );
                           _save();
                         },
+                ),
+              if (_hiddenMarks(character, track))
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    'ci sono caselle segnate oltre il limite della generazione',
+                    textAlign: TextAlign.center,
+                    style: SheetTextStyles.small,
+                  ),
                 ),
               if (track.stateLegend.isNotEmpty)
                 Padding(
@@ -647,6 +775,45 @@ class _SheetPageState extends State<SheetPage> {
                   ),
                 ),
       ],
+    );
+  }
+}
+
+/// La riga per aggiungere una voce, in fondo a una sezione della scheda.
+/// Compare solo a scheda sbloccata: da bloccata non deve tentare nessuno.
+class _AddRow extends StatelessWidget {
+  const _AddRow({this.label, required this.onTap});
+
+  final String? label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(6),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.add, size: 15, color: VtmColors.ink),
+              const SizedBox(width: 4),
+              // nelle colonne strette il testo si accorcia invece di
+              // sfondare la riga
+              Flexible(
+                child: Text(
+                  'aggiungi ${label ?? "voce"}',
+                  overflow: TextOverflow.ellipsis,
+                  style: SheetTextStyles.small,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
