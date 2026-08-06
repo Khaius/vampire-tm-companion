@@ -9,7 +9,7 @@ import 'sheet_schema.dart';
 /// Rispetto alle altre due schede i tratti principali arrivano a 9 pallini,
 /// esattamente come sono stampati sul PDF originale.
 const darkAgesSchema = SheetSchema(
-  type: SheetType.darkAges,
+  type: SheetType.darkAges20,
   clanWeaknessKey: 'debolezza',
   identity: [
     FieldDef('name', 'Nome'),

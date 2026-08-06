@@ -255,7 +255,7 @@ void main() {
   group('Il file scritto sul telefono', () {
     test('esportando si ottiene un file leggibile', () async {
       final uno = seed('Lucrezia');
-      final due = seed('Ysabeau', type: SheetType.darkAges);
+      final due = seed('Ysabeau', type: SheetType.darkAges20);
 
       final file = await state.exportCharacters([uno, due], overrideDir: temp);
       expect(await file.exists(), isTrue);
@@ -268,7 +268,7 @@ void main() {
       );
       expect(
         result.characters.map((c) => c.character.type),
-        containsAll(<SheetType>[SheetType.v20, SheetType.darkAges]),
+        containsAll(<SheetType>[SheetType.v20, SheetType.darkAges20]),
       );
     });
   });

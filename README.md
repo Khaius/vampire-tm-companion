@@ -11,33 +11,43 @@ Tre funzioni, sempre raggiungibili dal menu in fondo allo schermo:
 | d10 | **Dadi** | Tira i d10 con difficoltà e conteggio dei successi |
 | Libro aperto | **Documenti** | Carica e consulta PDF salvati sul dispositivo |
 
-## Le tre schede supportate
+## Le quattro schede supportate
 
-L'app riproduce fedelmente i tre stampati ufficiali, compresi i limiti dei
+L'app riproduce fedelmente i quattro stampati, compresi i limiti dei
 "pallini", che sono l'unica validazione presente:
 
-| | Vampire 5ª ed. | Vampiri 20° | Vampiri: I Secoli Bui |
-|---|---|---|---|
-| Attributi / Abilità | 0–5 | 0–5 | **0–9** |
-| Discipline / Background | 0–5 | 0–5 | 0–9 |
-| Virtù | — | 0–5 | 0–5 |
-| Umanità / Sentiero | 10 caselle | 10 pallini | 10 pallini |
-| Volontà | 15 caselle | 10 pallini + 10 caselle | 10 + 10 |
-| Salute | 15 caselle | 7 livelli | 7 livelli |
-| Sangue | Fame 0–5 · Potenza 0–10 | 20 caselle | 50 caselle |
+| | Vampire 5ª ed. | Vampiri 20° | Secoli Bui 20° | Secoli Bui 1ª ed. |
+|---|---|---|---|---|
+| Attributi / Abilità | 0–5 | 0–5 | **0–9** | **0–6** |
+| Discipline / Background | 0–5 | 0–5 | 0–9 | 0–6 |
+| Virtù | — | 0–5 | 0–5 | 0–6 |
+| Umanità / Sentiero | 10 caselle | 10 pallini | 10 pallini | 10 pallini |
+| Volontà | 15 caselle | 10 pallini + 10 caselle | 10 + 10 | 10 + 10 |
+| Salute | 15 caselle | 7 livelli | 7 livelli | 7 livelli |
+| Sangue | Fame 0–5 · Potenza 0–10 | 20 caselle | 50 caselle | 20 caselle |
 
-I nove pallini della scheda dei Secoli Bui non sono un errore: sono
-esattamente quelli stampati sul PDF originale, che lascia spazio ai tratti
-oltre il 5 delle generazioni basse.
+I nove pallini della scheda dei Secoli Bui 20° e i sei di quella di prima
+edizione non sono errori: sono esattamente quelli stampati sui PDF
+originali, che lasciano spazio ai tratti oltre il 5 delle generazioni basse.
 
-La scheda dei Secoli Bui tiene le sue abilità d'epoca — Cavalcare, Tiro con
-l'Arco, Teologia, Governo Domestico, Saggezza Popolare, Enigmi, Commercio —
-**e ha anche tutte quelle moderne** della 20ª: Armi da Fuoco, Guidare,
-Criminalità, Bassifondi, Finanza, Informatica, Scienze, Tecnologia. Serve
-alle cronache che partono nel Medioevo e con qualche salto temporale
-arrivano ai nostri giorni: il personaggio non cambia scheda per strada. Le
-abilità in comune usano la stessa chiave sulle due schede, quindi un valore
-scritto è lo stesso tratto in entrambe.
+Le due schede dei Secoli Bui sono **edizioni diverse dello stesso gioco** e
+si distinguono ovunque con il numero di edizione, sigle `SB20` e `SB1`.
+
+La scheda dei Secoli Bui 20° tiene le sue abilità d'epoca — Cavalcare, Tiro
+con l'Arco, Teologia, Governo Domestico, Saggezza Popolare, Enigmi,
+Commercio — **e ha anche tutte quelle moderne** della 20ª: Armi da Fuoco,
+Guidare, Criminalità, Bassifondi, Finanza, Informatica, Scienze, Tecnologia.
+Serve alle cronache che partono nel Medioevo e con qualche salto temporale
+arrivano ai nostri giorni: il personaggio non cambia scheda per strada.
+
+La scheda di **prima edizione** ha invece le trenta abilità del 1996 e
+basta: Recitazione, Schivare, Erboristeria, Musica, Muoversi
+Silenziosamente, Lingue, Scienza, Governo Domestico, Saggezza Popolare. È la
+scheda di quel regolamento, e mescolarci le abilità moderne la falserebbe.
+
+Le abilità in comune usano la stessa chiave su tutte le schede anche quando
+cambia il nome italiano — *Doti di Comando* e *Autorità* sono lo stesso
+tratto — quindi un valore scritto resta lo stesso tratto ovunque.
 
 Predatori, discipline, background, meriti e difetti proposti in
 autocompletamento sono estratti dai menu a tendina delle schede ufficiali:
@@ -57,13 +67,15 @@ Ambizione e Desiderio, che restano campi liberi.
 
 Scelto il clan, l'app scrive da sola le sue **Discipline** nelle prime righe
 libere e la sua **debolezza** nel riquadro che quella scheda le dedica
-("Debolezza di Clan" sulla V5, "Debolezza" sulle altre due).
+("Debolezza di Clan" sulla V5, "Debolezza" o "Debolezze" sulle altre).
 
-Le tre edizioni non dicono le stesse cose sullo stesso clan, quindi ogni
-edizione ha la sua tabella: i Gangrel della V5 hanno *Proteide*, quelli della
-20ª *Protean*; i Tremere della V5 hanno un sangue che non vincola più nessuno,
-quelli dei Secoli Bui sono ancora gli usurpatori che tutti odiano. I Cappadoci
-esistono solo nei Secoli Bui, i Giovanni solo nelle altre due.
+Le edizioni non dicono le stesse cose sullo stesso clan, quindi ognuna ha la
+sua tabella: i Gangrel della V5 hanno *Proteide*, quelli della 20ª *Protean*;
+i Tremere della V5 hanno un sangue che non vincola più nessuno, quelli dei
+Secoli Bui sono ancora gli usurpatori che tutti odiano; i Salubri hanno
+*Valeren* sulla scheda del 20° Anniversario e *Obeah* su quella di prima
+edizione, perché Valeren è arrivato solo nel 2002. I Cappadoci esistono solo
+nei Secoli Bui, i Giovanni solo nelle altre due.
 
 Il riempimento non cancella niente di quello che hai scritto:
 
@@ -76,7 +88,7 @@ Il riempimento non cancella niente di quello che hai scritto:
 Un clan scritto a mano con "Altro…" non precompila niente, per il semplice
 motivo che l'app non sa cosa sia.
 
-I dati vengono dai manuali delle tre edizioni, riscontrati online dove le
+I dati vengono dai manuali delle varie edizioni, riscontrati online dove le
 fonti si contraddicevano. Un caso resta incerto: le Lhiannan dei Secoli Bui,
 per cui alcune fonti danno *Ogham* e altre *Taumaturgia* come terza
 Disciplina — qui trovi Ogham. Come tutto il resto, si corregge a mano.
@@ -272,7 +284,7 @@ Su macOS, per iOS: `flutter build ios --release`.
 lib/
   core/           tema gotico e stato condiviso dell'app
   models/         scheda personaggio, tiro di dadi, tipi di scheda
-  data/           schemi delle tre schede e archivi su disco
+  data/           schemi delle quattro schede e archivi su disco
   ui/
     shell/        menu in basso e navigazione a tre sezioni
     characters/   lista, editor e scheda renderizzata
@@ -286,13 +298,13 @@ tool/
   generate_icons.py   rigenera le icone di lancio Android e iOS
 ```
 
-Le tre schede sono descritte da uno **schema** dichiarativo
+Le quattro schede sono descritte da uno **schema** dichiarativo
 (`lib/data/schema_*.dart`): editor e rendering leggono lo stesso schema, così
 non possono divergere. Aggiungere un tratto significa aggiungere una riga lì.
 
 Le regole che non stanno sulla scheda ma la governano vivono accanto agli
 schemi: `generations.dart` per i limiti di generazione, `clans.dart` per le
-Discipline e le debolezze di clan delle tre edizioni, `archetypes.dart` per
+Discipline e le debolezze di clan di ogni edizione, `archetypes.dart` per
 gli archetipi di Natura e Carattere. `character_transfer.dart` tiene il
 formato di esportazione e la sua lettura, compresi i controlli sui file che
 non vanno bene.
@@ -317,7 +329,7 @@ flutter test --update-goldens        # riallinea le immagini di riferimento
 
 I test coprono l'esportazione e la rilettura delle schede (file rovinati
 compresi), le foto, il conteggio dei dadi (compreso l'esempio delle specifiche),
-i limiti dei pallini delle tre schede, il salvataggio su disco, la
+i limiti dei pallini delle quattro schede, il salvataggio su disco, la
 navigazione del menu, la regola della scheda che resta aperta e le tabelle
 dei clan — comprese le verifiche che il menu di ogni scheda e la tabella
 della sua edizione non possano divergere, e che le Discipline precompilate

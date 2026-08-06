@@ -129,7 +129,7 @@ void main() {
 
     // si entra nell'editor con la scheda gia' creata
     expect(state.characters, hasLength(1));
-    expect(state.characters.single.type, SheetType.darkAges);
+    expect(state.characters.single.type, SheetType.darkAges20);
     expect(find.text('IDENTITÀ'), findsOneWidget);
     // i pallini della scheda Secoli Bui arrivano a 9
     expect(find.textContaining('da 0 a 9'), findsOneWidget);

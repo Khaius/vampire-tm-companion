@@ -357,6 +357,125 @@ const darkAgesClanRules = <ClanDef>[
   ),
 ];
 
+/// Clan della scheda I Secoli Bui di prima edizione.
+///
+/// Siamo nel 1197, una generazione prima della scheda del 20° Anniversario, e
+/// la tabella e' separata perche' l'edizione del 1996 assegna Discipline
+/// diverse: i Salubri hanno **Obeah**, non Valeren, che arriva solo con
+/// l'edizione del 2002. Mancano anche le stirpi pubblicate dopo, come le
+/// Lhiannan con l'Ogham: chi le gioca puo' sempre scrivere il clan a mano.
+const darkAges1ClanRules = <ClanDef>[
+  ClanDef(
+    'Assamiti',
+    ['Velocità', 'Oscurazione', 'Quietus'],
+    'Sete di vitae: '
+        'assaggiato il sangue di un altro Cainita serve un tiro di Self '
+        'Control/Istinto per smettere. La maledizione dei Tremere e\' ancora '
+        'lontana tre secoli.',
+  ),
+  ClanDef(
+    'Baali',
+    ['Daimoinon', 'Oscurazione', 'Presenza'],
+    'Infernalisti: i '
+        'veri simboli della fede li respingono e li feriscono piu\' del '
+        'normale, e qualunque Cainita scopra cosa sono dara\' loro la caccia. '
+        'Sono pensati come antagonisti, non come personaggi giocanti.',
+  ),
+  ClanDef(
+    'Brujah',
+    ['Velocità', 'Potenza', 'Presenza'],
+    'Sangue caldo: +2 '
+        'alla difficoltà di tutti i tiri per resistere alla frenesia.',
+  ),
+  ClanDef(
+    'Cappadoci',
+    ['Auspex', 'Robustezza', 'Mortis'],
+    'Aspetto '
+        'cadaverico: la loro pelle è quella di un morto e non c\'è trucco che '
+        'tenga. +1 alla difficoltà di tutti i tiri sociali. Nel 1197 sono '
+        'ancora il clan dei signori della morte: i Giovanni sono solo una '
+        'famiglia acquisita.',
+  ),
+  ClanDef(
+    'Followers of Set',
+    ['Oscurazione', 'Presenza', 'Serpentis'],
+    'Figli della notte: -1 dado a ogni azione svolta in piena luce, e due '
+        'livelli di danno in più dal sole.',
+  ),
+  ClanDef(
+    'Gangrel',
+    ['Animalismo', 'Robustezza', 'Protean'],
+    'Marchio della '
+        'Bestia: ogni frenesia lascia un tratto animalesco; ogni cinque tratti '
+        'accumulati, uno resta per sempre.',
+  ),
+  ClanDef(
+    'Lasombra',
+    ['Dominazione', 'Obtenebrazione', 'Potenza'],
+    'Nessun '
+        'riflesso: nessuna superficie lucida li mostra. Il sole infligge loro '
+        'un livello di danno in più.',
+  ),
+  ClanDef(
+    'Malkavian',
+    ['Auspex', 'Dementazione', 'Oscurazione'],
+    'Follia: al '
+        'momento dell\'Abbraccio si sceglie almeno un\'alienazione. La si può '
+        'soffocare con la Volontà, ma non guarire mai del tutto.',
+  ),
+  ClanDef(
+    'Nosferatu',
+    ['Animalismo', 'Oscurazione', 'Potenza'],
+    'Deformi: '
+        'Aspetto 0, e nessun tiro può usare l\'Aspetto se non per spaventare.',
+  ),
+  ClanDef(
+    'Ravnos',
+    ['Animalismo', 'Chimerismo', 'Robustezza'],
+    'Vizio: ogni '
+        'Ravnos ne ha uno caratteristico, e per non cedervi quando se ne '
+        'presenta l\'occasione serve un tiro di Self Control.',
+  ),
+  ClanDef(
+    'Salubri',
+    ['Auspex', 'Robustezza', 'Obeah'],
+    'Il terzo occhio si '
+        'apre a ogni potere oltre il primo, e brilla: usarli di nascosto è '
+        'quasi impossibile. Su tutti pesa la caccia dei Tremere, che li '
+        'accusano di infernalismo. In questa edizione la Disciplina di clan è '
+        'Obeah, non Valeren.',
+  ),
+  ClanDef(
+    'Toreador',
+    ['Auspex', 'Velocità', 'Presenza'],
+    'Rapiti dalla '
+        'bellezza: davanti a qualcosa di davvero bello serve un tiro di Self '
+        'Control a difficoltà 6 per non restare a contemplarlo.',
+  ),
+  ClanDef(
+    'Tremere',
+    ['Auspex', 'Dominazione', 'Taumaturgia'],
+    'Sangue '
+        'servile: bastano due sorsi del sangue di un altro vampiro per esserne '
+        'vincolati, invece dei tre normali. E in questi secoli sono ancora gli '
+        'usurpatori: ogni clan li guarda con odio.',
+  ),
+  ClanDef(
+    'Tzimisce',
+    ['Animalismo', 'Auspex', 'Vicissitudine'],
+    'Legati alla '
+        'terra: devono riposare avvolti da almeno due manciate della terra del '
+        'luogo in cui sono nati.',
+  ),
+  ClanDef(
+    'Ventrue',
+    ['Dominazione', 'Robustezza', 'Presenza'],
+    'Palato '
+        'esigente: si nutrono di un solo tipo di preda; qualunque altro sangue '
+        'viene rigettato.',
+  ),
+];
+
 /// I nomi dei clan, per il menu a tendina delle schede.
 ///
 /// Sono elenchi a parte perche' gli schemi sono `const` e non possono
@@ -414,11 +533,30 @@ const darkAgesClanNames = <String>[
   'Ventrue',
 ];
 
+const darkAges1ClanNames = <String>[
+  'Assamiti',
+  'Baali',
+  'Brujah',
+  'Cappadoci',
+  'Followers of Set',
+  'Gangrel',
+  'Lasombra',
+  'Malkavian',
+  'Nosferatu',
+  'Ravnos',
+  'Salubri',
+  'Toreador',
+  'Tremere',
+  'Tzimisce',
+  'Ventrue',
+];
+
 /// La tabella dei clan dell'edizione richiesta.
 List<ClanDef> clanRulesFor(SheetType type) => switch (type) {
   SheetType.v5 => v5ClanRules,
   SheetType.v20 => v20ClanRules,
-  SheetType.darkAges => darkAgesClanRules,
+  SheetType.darkAges20 => darkAgesClanRules,
+  SheetType.darkAges1 => darkAges1ClanRules,
 };
 
 /// Il clan scelto, se il testo corrisponde a uno di quelli dell'edizione.
@@ -440,7 +578,12 @@ ClanDef? clanRule(SheetType type, String? name) {
 bool isGeneratedWeakness(String text) {
   final wanted = text.trim();
   if (wanted.isEmpty) return false;
-  for (final table in [v5ClanRules, v20ClanRules, darkAgesClanRules]) {
+  for (final table in [
+    v5ClanRules,
+    v20ClanRules,
+    darkAgesClanRules,
+    darkAges1ClanRules,
+  ]) {
     for (final clan in table) {
       if (clan.weakness == wanted) return true;
     }

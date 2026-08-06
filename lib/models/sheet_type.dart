@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 
-/// Le tre tipologie di scheda supportate, corrispondenti ai tre PDF ufficiali
-/// da cui l'app e' stata modellata.
+/// Le tipologie di scheda supportate, corrispondenti ai PDF da cui l'app e'
+/// stata modellata.
+///
+/// Dei Secoli Bui esistono due schede di edizioni diverse: si distinguono
+/// ovunque con il numero di edizione (1ª e 20° Anniversario), mai con il solo
+/// nome dell'ambientazione.
 enum SheetType {
   v5(
     id: 'v5',
     title: 'Vampire',
     subtitle: 'The Masquerade — 5ª Edizione',
-    shortLabel: 'V5',
+    badge: 'V5',
     description:
         'Scheda Camarilla Italia. Attributi e Skill fino a 5, tracker di '
         'Salute e Volontà a caselle, Fame e Potenza del Sangue.',
@@ -19,7 +23,7 @@ enum SheetType {
     id: 'v20',
     title: 'Vampiri',
     subtitle: 'La Masquerade — 20° Anniversario',
-    shortLabel: 'V20',
+    badge: 'V20',
     description:
         'Scheda classica su due pagine. Attributi, Abilità, Discipline e '
         'Virtù fino a 5, Punti Sangue e Volontà a caselle.',
@@ -27,24 +31,37 @@ enum SheetType {
     accent: Color(0xFF6E1414),
     parchment: Color(0xFFF0EDE7),
   ),
-  darkAges(
+  darkAges20(
     id: 'dark_ages',
     title: 'Vampiri',
     subtitle: 'I Secoli Bui — 20° Anniversario',
-    shortLabel: 'Secoli Bui',
+    badge: 'SB20',
     description:
         'Scheda medievale. I tratti arrivano fino a 9 pallini come da scheda, '
         'Sentiero al posto dell\'Umanità e riserva di sangue fino a 50.',
     traitMax: 9,
     accent: Color(0xFF7E1B10),
     parchment: Color(0xFFF7F1E4),
+  ),
+  darkAges1(
+    id: 'dark_ages_1',
+    title: 'Vampiri',
+    subtitle: 'I Secoli Bui — 1ª Edizione',
+    badge: 'SB1',
+    description:
+        'Scheda estesa della prima edizione, ambientata nel 1197. Abilità '
+        'd\'epoca (Recitazione, Erboristeria, Muoversi Silenziosamente), '
+        'tratti fino a 6 pallini come da scheda, Sentiero e 20 Punti Sangue.',
+    traitMax: 6,
+    accent: Color(0xFF6B2A12),
+    parchment: Color(0xFFF4ECDB),
   );
 
   const SheetType({
     required this.id,
     required this.title,
     required this.subtitle,
-    required this.shortLabel,
+    required this.badge,
     required this.description,
     required this.traitMax,
     required this.accent,
@@ -55,7 +72,11 @@ enum SheetType {
   final String id;
   final String title;
   final String subtitle;
-  final String shortLabel;
+
+  /// Sigla dell'edizione: sta nel quadratino accanto al nome nella lista e
+  /// nel cartellino della scelta del tipo, dove ci sono 44 pixel e basta.
+  final String badge;
+
   final String description;
 
   /// Valore massimo consentito per i "pallini" dei tratti principali
@@ -64,6 +85,10 @@ enum SheetType {
 
   final Color accent;
   final Color parchment;
+
+  /// Vero per tutte le schede dei Secoli Bui: decide la cornice medievale e
+  /// i colori della pergamena, che le due edizioni condividono.
+  bool get isDarkAges => this == darkAges20 || this == darkAges1;
 
   static SheetType fromId(String? id) {
     return SheetType.values.firstWhere(

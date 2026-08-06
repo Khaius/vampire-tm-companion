@@ -7,17 +7,127 @@ void main() {
     test('V5 e V20 arrivano a 5, I Secoli Bui a 9', () {
       expect(SheetType.v5.traitMax, 5);
       expect(SheetType.v20.traitMax, 5);
-      expect(SheetType.darkAges.traitMax, 9);
+      expect(SheetType.darkAges20.traitMax, 9);
     });
 
     test('Discipline e Background dei Secoli Bui arrivano a 9', () {
-      final schema = schemaFor(SheetType.darkAges);
+      final schema = schemaFor(SheetType.darkAges20);
       expect(schema.listSection('discipline').dotMax, 9);
       expect(schema.listSection('background').dotMax, 9);
       expect(schema.listSection('altre').dotMax, 9);
       // le Vie restano a 5 pallini come sul PDF
       expect(schema.listSection('vie').dotMax, 5);
       expect(schema.virtueMax, 5);
+    });
+
+    test('I Secoli Bui di prima edizione si fermano a 6', () {
+      expect(SheetType.darkAges1.traitMax, 6);
+      final schema = schemaFor(SheetType.darkAges1);
+      expect(schema.listSection('discipline').dotMax, 6);
+      expect(schema.listSection('background').dotMax, 6);
+      expect(schema.listSection('altre').dotMax, 6);
+      // sul cartaceo del 1996 anche le Virtù hanno sei pallini
+      expect(schema.virtueMax, 6);
+    });
+  });
+
+  group('Le due schede dei Secoli Bui', () {
+    test('sono edizioni distinte, con id diversi e cornice medievale', () {
+      expect(SheetType.darkAges20.id, 'dark_ages');
+      expect(SheetType.darkAges1.id, 'dark_ages_1');
+      expect(SheetType.darkAges20.isDarkAges, isTrue);
+      expect(SheetType.darkAges1.isDarkAges, isTrue);
+      expect(SheetType.v20.isDarkAges, isFalse);
+      // il numero di edizione compare sia nel sottotitolo sia nella sigla
+      expect(SheetType.darkAges20.subtitle, contains('20°'));
+      expect(SheetType.darkAges1.subtitle, contains('1ª'));
+      expect(
+        SheetType.darkAges1.badge,
+        isNot(SheetType.darkAges20.badge),
+        reason: 'le due sigle si devono poter distinguere nella lista',
+      );
+    });
+
+    test('la prima edizione ha le abilità del 1996 e non quelle moderne', () {
+      final labels = schemaFor(
+        SheetType.darkAges1,
+      ).abilities.expand((g) => g.traits).map((t) => t.label).toSet();
+
+      expect(
+        labels,
+        containsAll(<String>[
+          'Recitazione',
+          'Schivare',
+          'Erboristeria',
+          'Musica',
+          'Muoversi Silenziosamente',
+          'Lingue',
+          'Scienza',
+          'Governo Domestico',
+          'Saggezza Popolare',
+        ]),
+      );
+      // le abilità moderne della scheda 20° qui non ci sono
+      expect(
+        labels.intersection(<String>{
+          'Armi da Fuoco',
+          'Informatica',
+          'Guidare',
+          'Tecnologia',
+        }),
+        isEmpty,
+      );
+      // dieci per colonna, come sono stampate
+      for (final group in schemaFor(SheetType.darkAges1).abilities) {
+        expect(group.traits.length, 10, reason: group.key);
+      }
+    });
+
+    test('le abilità equivalenti condividono la chiave con la scheda 20°', () {
+      Map<String, String> keysByLabel(SheetType type) => {
+        for (final trait in schemaFor(type).abilities.expand((g) => g.traits))
+          trait.label: trait.key,
+      };
+      final vecchia = keysByLabel(SheetType.darkAges20);
+      final prima = keysByLabel(SheetType.darkAges1);
+
+      // stessa abilità, nome italiano diverso fra le due edizioni
+      const equivalenze = <String, String>{
+        'Doti di Comando': 'Autorità',
+        'Recitazione': 'Espressività',
+        'Addestrare Animali': 'Affinità Animale',
+        'Mestiere': 'Manualità',
+        'Mischia': 'Armi da Mischia',
+        'Muoversi Silenziosamente': 'Furtività',
+        'Scienza': 'Scienze',
+      };
+      for (final entry in equivalenze.entries) {
+        expect(
+          prima[entry.key],
+          vecchia[entry.value],
+          reason: 'chiave diversa per ${entry.key}',
+        );
+      }
+      // e quelle che si chiamano uguale usano ovviamente la stessa chiave
+      for (final entry in prima.entries) {
+        if (!vecchia.containsKey(entry.key)) continue;
+        expect(
+          entry.value,
+          vecchia[entry.key],
+          reason: 'chiave diversa per ${entry.key}',
+        );
+      }
+    });
+
+    test('i tracker della prima edizione sono quelli stampati', () {
+      final schema = schemaFor(SheetType.darkAges1);
+      expect(schema.track('sangue').length, 20);
+      expect(schema.track('sentiero').length, 10);
+      expect(schema.track('volonta').length, 10);
+      expect(schema.track('salute').length, 7);
+      expect(schema.track('salute').rowLabels.first, 'Contusione');
+      expect(schema.track('salute').rowLabels.last, 'Ferita Incapacitante');
+      expect(schema.hasTrack('umanita'), isFalse);
     });
   });
 
@@ -77,7 +187,7 @@ void main() {
       expect(v20.track('sangue').length, 20);
       expect(v20.track('volonta').length, 10);
 
-      final darkAges = schemaFor(SheetType.darkAges);
+      final darkAges = schemaFor(SheetType.darkAges20);
       expect(darkAges.track('sangue').length, 50);
       expect(darkAges.track('sentiero').length, 10);
       expect(darkAges.hasTrack('umanita'), isFalse);
@@ -90,7 +200,7 @@ void main() {
           SheetType.v20,
         ).abilities.expand((g) => g.traits).map((t) => t.label).toSet();
         final darkAges = schemaFor(
-          SheetType.darkAges,
+          SheetType.darkAges20,
         ).abilities.expand((g) => g.traits).map((t) => t.label).toSet();
 
         // le abilità d'epoca restano solo sulla scheda dei Secoli Bui
@@ -110,7 +220,7 @@ void main() {
           trait.label: trait.key,
       };
       final v20 = keysByLabel(SheetType.v20);
-      final darkAges = keysByLabel(SheetType.darkAges);
+      final darkAges = keysByLabel(SheetType.darkAges20);
       for (final entry in v20.entries) {
         expect(
           darkAges[entry.key],

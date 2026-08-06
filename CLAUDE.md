@@ -15,8 +15,9 @@ variabili restano in inglese, come è normale in Dart.
 `vtm_companion` è un compagno da tavolo per **Vampire: The Masquerade**, in
 Flutter, per telefono. Fa tre cose e solo tre:
 
-1. **Schede personaggio** delle tre edizioni (V5 Camarilla Italia, V20 20°
-   Anniversario, V20 I Secoli Bui), create e modificate a mano;
+1. **Schede personaggio** di quattro edizioni (V5 Camarilla Italia, V20 20°
+   Anniversario, I Secoli Bui 20° Anniversario, I Secoli Bui 1ª edizione),
+   create e modificate a mano;
 2. **Tiro dei d10** con difficoltà e conteggio dei successi;
 3. **Libreria di PDF** importati dal telefono e consultabili offline.
 
@@ -60,14 +61,16 @@ lib/
     theme.dart          colori (VtmColors), tema Material, stili della scheda
   models/
     character.dart      Character e TraitEntry: solo dati, nessuna struttura
-    sheet_type.dart     le tre edizioni, con titoli e massimo dei pallini
+    sheet_type.dart     le quattro edizioni, con titoli, sigla e massimo
+                        dei pallini
     dice.dart           DiceRoll: il conteggio dei successi
   data/
     sheet_schema.dart   i tipi che descrivono una scheda (FieldDef, TraitDef,
                         ListSection, TrackDef, TextSection, SheetSchema)
-    schema_v5.dart      \
-    schema_v20.dart      >  una costante per edizione: è QUI che vive la
-    schema_dark_ages.dart/   struttura delle schede
+    schema_v5.dart            \
+    schema_v20.dart            \  una costante per edizione: è QUI che
+    schema_dark_ages.dart      /  vive la struttura delle schede
+    schema_dark_ages_first.dart/
     schemas.dart        schemaFor(SheetType)
     generations.dart    tabella delle generazioni (max tratti, sangue)
     clans.dart          Discipline e debolezze di clan, una tabella per
@@ -93,7 +96,7 @@ in tutte e due le viste.
 
 `Character` non sa niente della struttura: tiene mappe di testi, pallini,
 liste e tracker indicizzate per chiave. Le chiavi le decide lo schema.
-Questo è il motivo per cui tre schede molto diverse condividono un solo
+Questo è il motivo per cui quattro schede molto diverse condividono un solo
 editor, un solo salvataggio e un solo rendering.
 
 **Non aggiungere campi a `Character` per tratti specifici.** Se serve un
@@ -101,8 +104,10 @@ nuovo tratto, va nello schema.
 
 **Le chiavi non si cambiano mai.** Sono scritte nei file JSON delle schede
 già create: rinominare `ab.atletica` significa cancellare quel valore dalle
-schede di chi gioca. Le abilità in comune fra V20 e Secoli Bui usano di
-proposito la stessa chiave, e un test lo verifica.
+schede di chi gioca. Le abilità in comune fra le schede usano di proposito
+la stessa chiave anche quando cambia il nome italiano (*Doti di Comando* dei
+Secoli Bui di 1ª è `ab.autorita`, come l'*Autorità* della 20ª), e dei test lo
+verificano.
 
 ## Decisioni prese, e perché
 
@@ -132,9 +137,17 @@ Cambiarle è legittimo se l'utente lo chiede; farlo per iniziativa propria no.
   *Proteide*, la 20ª *Presenza* e *Protean*). I nomi delle Discipline V5
   sono stati estratti dai menu a tendina del PDF ufficiale, non scritti a
   memoria.
-- **La scheda dei Secoli Bui ha anche le abilità moderne** (Armi da Fuoco,
-  Informatica, Guidare...): serve alle cronache che dal 1230 arrivano a oggi
-  con salti temporali. Le abilità d'epoca restano.
+- **La scheda dei Secoli Bui 20° ha anche le abilità moderne** (Armi da
+  Fuoco, Informatica, Guidare...): serve alle cronache che dal 1230 arrivano
+  a oggi con salti temporali. Le abilità d'epoca restano. La scheda di **1ª
+  edizione no**: ha le trenta abilità del 1996 e basta, perché è la scheda di
+  quel regolamento e mescolarle la falserebbe.
+- **Le due schede dei Secoli Bui si distinguono sempre con il numero di
+  edizione**, mai con la sola ambientazione: *I Secoli Bui — 1ª Edizione* e
+  *I Secoli Bui — 20° Anniversario*, sigle `SB1` e `SB20`. Nel codice sono
+  `SheetType.darkAges1` e `SheetType.darkAges20`; l'`id` salvato su disco
+  resta `dark_ages` per la 20ª (era già scritto nei file) e `dark_ages_1` per
+  la nuova.
 - **Esportazione in un solo file JSON**, foto comprese in base64, condiviso
   con il pannello di sistema. JSON e non un formato binario perché se un
   giorno l'app non ci fosse più il file resta leggibile. L'importazione crea

@@ -134,7 +134,7 @@ void main() {
 
   testWidgets('lista schede', (tester) async {
     seedV20();
-    final darkAges = state.createCharacter(SheetType.darkAges);
+    final darkAges = state.createCharacter(SheetType.darkAges20);
     darkAges.texts.addAll({
       'name': 'Ysabeau d\'Aquitania',
       'clan': 'Cappadoci',
@@ -317,7 +317,7 @@ void main() {
   });
 
   testWidgets('scheda Secoli Bui con i nove pallini', (tester) async {
-    final character = state.createCharacter(SheetType.darkAges);
+    final character = state.createCharacter(SheetType.darkAges20);
     character.texts.addAll({
       'name': 'Ysabeau d\'Aquitania',
       'clan': 'Cappadoci',
@@ -345,6 +345,39 @@ void main() {
     await expectLater(
       find.byType(MaterialApp),
       matchesGoldenFile('goldens/10_scheda_secoli_bui.png'),
+    );
+  });
+
+  testWidgets('scheda Secoli Bui di prima edizione', (tester) async {
+    final character = state.createCharacter(SheetType.darkAges1);
+    character.texts.addAll({
+      'name': 'Corvino da Rialto',
+      'clan': 'Cappadoci',
+      'generation': 'VIII',
+      'attivita_prec': 'Speziale',
+      'chronicle': 'Le Notti della Serenissima',
+    });
+    character.dots.addAll({
+      'ab.atletica': 2,
+      'ab.criminalita': 3,
+      'ab.autorita': 1,
+      'ab.espressivita': 4,
+      'ab.schivare': 2,
+      'ab.erboristeria': 5,
+      'ab.musica': 3,
+      'ab.furtivita': 4,
+      'ab.lingue': 3,
+      'ab.scienze': 2,
+    });
+
+    await boot(tester);
+    await tester.tap(find.text(character.displayName));
+    await tester.pumpAndSettle();
+    await tester.drag(find.byType(ListView).first, const Offset(0, -1100));
+    await tester.pumpAndSettle();
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('goldens/17_scheda_secoli_bui_1a.png'),
     );
   });
 

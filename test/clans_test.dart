@@ -78,7 +78,7 @@ void main() {
     test('i Tremere hanno debolezze diverse nelle tre edizioni', () {
       final v5 = clanRule(SheetType.v5, 'Tremere')!.weakness;
       final v20 = clanRule(SheetType.v20, 'Tremere')!.weakness;
-      final darkAges = clanRule(SheetType.darkAges, 'Tremere')!.weakness;
+      final darkAges = clanRule(SheetType.darkAges20, 'Tremere')!.weakness;
       // nella 5a il loro sangue non vincola piu'; prima vincolava anche troppo
       expect(v5, contains('non vincola'));
       expect(v20, contains('due sorsi'));
@@ -86,10 +86,10 @@ void main() {
     });
 
     test('i clan esistono solo nell\'edizione che li ha', () {
-      expect(clanRule(SheetType.darkAges, 'Cappadoci'), isNotNull);
+      expect(clanRule(SheetType.darkAges20, 'Cappadoci'), isNotNull);
       expect(clanRule(SheetType.v20, 'Cappadoci'), isNull);
       expect(clanRule(SheetType.v20, 'Giovanni'), isNotNull);
-      expect(clanRule(SheetType.darkAges, 'Giovanni'), isNull);
+      expect(clanRule(SheetType.darkAges20, 'Giovanni'), isNull);
       expect(clanRule(SheetType.v5, 'Sangue Debole'), isNotNull);
     });
 
@@ -218,7 +218,7 @@ void main() {
 
   group('Archetipi di Natura e Carattere', () {
     test('le due schede che li hanno propongono la stessa lista', () {
-      for (final type in [SheetType.v20, SheetType.darkAges]) {
+      for (final type in [SheetType.v20, SheetType.darkAges20]) {
         final identity = schemaFor(type).identity;
         for (final key in ['nature', 'demeanor']) {
           final field = identity.firstWhere((f) => f.key == key);

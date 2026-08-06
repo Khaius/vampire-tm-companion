@@ -510,7 +510,7 @@ class _CharacterAvatar extends StatelessWidget {
         border: Border.all(color: character.type.accent.withValues(alpha: 0.6)),
       ),
       child: Text(
-        character.type == SheetType.darkAges ? 'SB' : character.type.shortLabel,
+        character.type.badge,
         style: const TextStyle(
           fontFamily: 'Cinzel',
           fontWeight: FontWeight.w700,
@@ -575,22 +575,28 @@ class _TypeCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: type.accent.withValues(alpha: 0.25),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      type.shortLabel.toUpperCase(),
-                      style: const TextStyle(
-                        fontFamily: 'Cinzel',
-                        fontSize: 11,
-                        letterSpacing: 1.2,
-                        fontWeight: FontWeight.w700,
+                  // Sigla e non nome esteso: l'edizione per intero e' scritta
+                  // due righe piu' sotto, nel sottotitolo.
+                  Flexible(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: type.accent.withValues(alpha: 0.25),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        type.badge,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: 'Cinzel',
+                          fontSize: 11,
+                          letterSpacing: 1.2,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ),

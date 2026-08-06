@@ -10,7 +10,7 @@ import '../../models/sheet_type.dart';
 enum FrameStyle { iron, medieval }
 
 FrameStyle frameStyleFor(SheetType type) =>
-    type == SheetType.darkAges ? FrameStyle.medieval : FrameStyle.iron;
+    type.isDarkAges ? FrameStyle.medieval : FrameStyle.iron;
 
 /// Disegna la cornice della scheda: bordo doppio, cancellata o fregi.
 class _FramePainter extends CustomPainter {
@@ -179,9 +179,7 @@ class SheetMasthead extends StatelessWidget {
             fontSize: 32,
             height: 1,
             letterSpacing: 3,
-            color: type == SheetType.darkAges
-                ? const Color(0xFF3A1416)
-                : VtmColors.ink,
+            color: type.isDarkAges ? const Color(0xFF3A1416) : VtmColors.ink,
           ),
         ),
         const SizedBox(height: 4),
@@ -221,7 +219,7 @@ class SheetBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final medieval = type == SheetType.darkAges;
+    final medieval = type.isDarkAges;
     final color = medieval ? type.accent : VtmColors.ink;
     final ink = medieval ? const Color(0xFF3A1416) : VtmColors.ink;
     final banner = Padding(

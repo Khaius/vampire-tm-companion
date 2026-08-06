@@ -20,7 +20,7 @@ void main() {
 
   test('la scheda sopravvive al salvataggio e alla rilettura', () async {
     final repository = CharacterRepository(overrideDir: temp);
-    final character = Character(id: 'abc', type: SheetType.darkAges);
+    final character = Character(id: 'abc', type: SheetType.darkAges20);
     character.texts['name'] = 'Ysabeau di Aquitania';
     character.texts['clan'] = 'Toreador';
     character.dots['attr.forza'] = 7;
@@ -34,7 +34,7 @@ void main() {
 
     final reloaded = (await repository.loadAll()).single;
     expect(reloaded.id, 'abc');
-    expect(reloaded.type, SheetType.darkAges);
+    expect(reloaded.type, SheetType.darkAges20);
     expect(reloaded.displayName, 'Ysabeau di Aquitania');
     expect(reloaded.dot('attr.forza'), 7);
     expect(reloaded.list('discipline').single.name, 'Ascendente');

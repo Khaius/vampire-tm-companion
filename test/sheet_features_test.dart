@@ -111,7 +111,7 @@ void main() {
     testWidgets('sui Secoli Bui la settima generazione ferma i dadi al sesto', (
       tester,
     ) async {
-      final character = state.createCharacter(SheetType.darkAges);
+      final character = state.createCharacter(SheetType.darkAges20);
       character.texts['name'] = 'Ysabeau';
       character.texts['generation'] = 'VII'; // massimo 6
       await openSheet(tester, character);
@@ -136,7 +136,7 @@ void main() {
     testWidgets('la dodicesima generazione ferma i dadi al quinto', (
       tester,
     ) async {
-      final character = state.createCharacter(SheetType.darkAges);
+      final character = state.createCharacter(SheetType.darkAges20);
       character.texts['name'] = 'Ysabeau';
       character.texts['generation'] = 'XII'; // massimo 5
       await openSheet(tester, character);
@@ -156,7 +156,7 @@ void main() {
     testWidgets('senza generazione indicata vale quanto stampa la scheda', (
       tester,
     ) async {
-      final character = state.createCharacter(SheetType.darkAges);
+      final character = state.createCharacter(SheetType.darkAges20);
       character.texts['name'] = 'Ysabeau';
       await openSheet(tester, character);
 
@@ -206,7 +206,7 @@ void main() {
     testWidgets('dal menu si può anche scriversi un clan proprio', (
       tester,
     ) async {
-      final character = state.createCharacter(SheetType.darkAges);
+      final character = state.createCharacter(SheetType.darkAges20);
       character.texts['name'] = 'Ysabeau';
       await openSheet(tester, character);
 

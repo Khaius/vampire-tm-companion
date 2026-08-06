@@ -43,6 +43,14 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  /// Le caselle disegnate della riserva di sangue.
+  Finder bloodBoxes() => find.descendant(
+    of: find
+        .ancestor(of: find.text('Punti Sangue'), matching: find.byType(Column))
+        .first,
+    matching: find.byType(TrackBox),
+  );
+
   group('Barra di scorrimento', () {
     testWidgets('c\'è sulla scheda e nell\'editor', (tester) async {
       final character = state.createCharacter(SheetType.v20);
@@ -58,17 +66,6 @@ void main() {
   });
 
   group('Punti sangue oltre la generazione', () {
-    /// Le caselle disegnate della riserva di sangue.
-    Finder bloodBoxes() => find.descendant(
-      of: find
-          .ancestor(
-            of: find.text('Punti Sangue'),
-            matching: find.byType(Column),
-          )
-          .first,
-      matching: find.byType(TrackBox),
-    );
-
     testWidgets('senza generazione si vedono tutte quelle della scheda', (
       tester,
     ) async {
@@ -89,7 +86,7 @@ void main() {
     testWidgets('la settima ne mostra venti, la quinta quaranta', (
       tester,
     ) async {
-      final character = state.createCharacter(SheetType.darkAges);
+      final character = state.createCharacter(SheetType.darkAges20);
       character.texts['name'] = 'Ysabeau';
       character.texts['generation'] = 'VII';
       await openSheet(tester, character);
@@ -281,6 +278,56 @@ void main() {
 
       expect(character.list('pregi').length, 1);
       expect(character.list('pregi').single.name, 'Volontà di ferro');
+    });
+  });
+
+  group('Scheda dei Secoli Bui di prima edizione', () {
+    testWidgets('si disegna e si apre in modifica senza sfondare le righe', (
+      tester,
+    ) async {
+      final character = state.createCharacter(SheetType.darkAges1);
+      character.texts.addAll({
+        'name': 'Corvino da Rialto',
+        'clan': 'Cappadoci',
+        'generation': 'VIII',
+        'attivita_prec': 'Speziale',
+      });
+      character.dots['ab.erboristeria'] = 4;
+      await openSheet(tester, character);
+
+      // le abilità del 1996, non quelle del 20° Anniversario
+      expect(find.text('Erboristeria'), findsOneWidget);
+      expect(find.text('Muoversi Silenziosamente'), findsOneWidget);
+      expect(find.text('Armi da Fuoco'), findsNothing);
+
+      await tester.tap(find.byIcon(Icons.edit_note));
+      await tester.pumpAndSettle();
+      expect(find.byType(CharacterEditPage), findsOneWidget);
+    });
+
+    testWidgets('stampa venti caselle di sangue, non cinquanta', (
+      tester,
+    ) async {
+      final character = state.createCharacter(SheetType.darkAges1);
+      character.texts['name'] = 'Corvino da Rialto';
+      await openSheet(tester, character);
+      expect(bloodBoxes(), findsNWidgets(20));
+    });
+
+    testWidgets('si scorre fino in fondo senza incidenti', (tester) async {
+      final character = state.createCharacter(SheetType.darkAges1);
+      character.texts['name'] = 'Corvino da Rialto';
+      await openSheet(tester, character);
+
+      // scorrendo si costruiscono tutte le sezioni: un overflow in una
+      // qualsiasi di esse farebbe fallire il test qui
+      await tester.scrollUntilVisible(
+        find.text('STORIA DEL PERSONAGGIO'),
+        600,
+        maxScrolls: 200,
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('STORIA DEL PERSONAGGIO'), findsOneWidget);
     });
   });
 }
