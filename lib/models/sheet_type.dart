@@ -51,8 +51,8 @@ enum SheetType {
     description:
         'Scheda estesa della prima edizione, ambientata nel 1197. Abilità '
         'd\'epoca (Recitazione, Erboristeria, Muoversi Silenziosamente), '
-        'tratti fino a 6 pallini come da scheda, Sentiero e 20 Punti Sangue.',
-    traitMax: 6,
+        'tratti fino a 9 pallini, Sentiero e 20 Punti Sangue.',
+    traitMax: 9,
     accent: Color(0xFF6B2A12),
     parchment: Color(0xFFF4ECDB),
   );

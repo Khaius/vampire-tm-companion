@@ -10,8 +10,12 @@ import 'sheet_schema.dart';
 /// Non va confusa con [darkAgesSchema], che e' l'edizione del 20°
 /// Anniversario: stessa ambientazione, regole diverse. Qui le Abilita' sono
 /// quelle del 1996 (Recitazione, Schivare, Erboristeria, Musica, Muoversi
-/// Silenziosamente, Lingue, Scienza), i tratti arrivano a 6 pallini come sono
-/// stampati sul PDF e i Punti Sangue sono 20 invece di 50.
+/// Silenziosamente, Lingue, Scienza) e i Punti Sangue sono 20 invece di 50.
+///
+/// I pallini arrivano a 9 come sulla scheda del 20° Anniversario: il cartaceo
+/// ne stampa sei, ma le generazioni basse ne concedono di piu' e un valore
+/// alto va potuto scrivere. Quelli che la generazione non concede si vedono
+/// sbarrati, non spariscono.
 ///
 /// Le chiavi delle Abilita' comuni sono le stesse delle altre schede anche
 /// quando il nome italiano cambia (Doti di Comando e' `ab.autorita`,
@@ -182,8 +186,8 @@ const darkAges1Schema = SheetSchema(
       TraitDef('ab.scienze', 'Scienza', specialtyKey: 'spec.ab.scienze'),
     ]),
   ],
-  // Sul cartaceo anche le Virtu' hanno sei pallini, come tutto il resto.
-  virtueMax: 6,
+  // Anche le Virtu' seguono il limite di generazione, come gli altri tratti.
+  virtueMax: 9,
   virtues: [
     TraitDef('virtu.coscienza', 'Coscienza/Convinzione'),
     TraitDef('virtu.autocontrollo', 'Self Control/Istinto'),
@@ -196,7 +200,7 @@ const darkAges1Schema = SheetSchema(
       slots: 5,
       hasDots: true,
       limitedByGeneration: true,
-      dotMax: 6,
+      dotMax: 9,
       suggestions: [
         'Animalismo',
         'Auspex',
@@ -225,7 +229,7 @@ const darkAges1Schema = SheetSchema(
       slots: 5,
       hasDots: true,
       limitedByGeneration: true,
-      dotMax: 6,
+      dotMax: 9,
       suggestions: [
         'Alleati',
         'Armento',
@@ -244,7 +248,7 @@ const darkAges1Schema = SheetSchema(
       slots: 7,
       hasDots: true,
       limitedByGeneration: true,
-      dotMax: 6,
+      dotMax: 9,
     ),
     // Sul cartaceo Pregi e Difetti stanno in un'unica tabella.
     ListSection(

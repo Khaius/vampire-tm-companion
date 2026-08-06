@@ -20,14 +20,13 @@ void main() {
       expect(schema.virtueMax, 5);
     });
 
-    test('I Secoli Bui di prima edizione si fermano a 6', () {
-      expect(SheetType.darkAges1.traitMax, 6);
+    test('anche I Secoli Bui di prima edizione arrivano a 9', () {
+      expect(SheetType.darkAges1.traitMax, 9);
       final schema = schemaFor(SheetType.darkAges1);
-      expect(schema.listSection('discipline').dotMax, 6);
-      expect(schema.listSection('background').dotMax, 6);
-      expect(schema.listSection('altre').dotMax, 6);
-      // sul cartaceo del 1996 anche le Virtù hanno sei pallini
-      expect(schema.virtueMax, 6);
+      expect(schema.listSection('discipline').dotMax, 9);
+      expect(schema.listSection('background').dotMax, 9);
+      expect(schema.listSection('altre').dotMax, 9);
+      expect(schema.virtueMax, 9);
     });
   });
 

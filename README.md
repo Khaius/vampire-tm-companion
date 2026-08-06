@@ -18,17 +18,17 @@ L'app riproduce fedelmente i quattro stampati, compresi i limiti dei
 
 | | Vampire 5ª ed. | Vampiri 20° | Secoli Bui 20° | Secoli Bui 1ª ed. |
 |---|---|---|---|---|
-| Attributi / Abilità | 0–5 | 0–5 | **0–9** | **0–6** |
-| Discipline / Background | 0–5 | 0–5 | 0–9 | 0–6 |
-| Virtù | — | 0–5 | 0–5 | 0–6 |
+| Attributi / Abilità | 0–5 | 0–5 | **0–9** | **0–9** |
+| Discipline / Background | 0–5 | 0–5 | 0–9 | 0–9 |
+| Virtù | — | 0–5 | 0–5 | 0–9 |
 | Umanità / Sentiero | 10 caselle | 10 pallini | 10 pallini | 10 pallini |
 | Volontà | 15 caselle | 10 pallini + 10 caselle | 10 + 10 | 10 + 10 |
 | Salute | 15 caselle | 7 livelli | 7 livelli | 7 livelli |
 | Sangue | Fame 0–5 · Potenza 0–10 | 20 caselle | 50 caselle | 20 caselle |
 
-I nove pallini della scheda dei Secoli Bui 20° e i sei di quella di prima
-edizione non sono errori: sono esattamente quelli stampati sui PDF
-originali, che lasciano spazio ai tratti oltre il 5 delle generazioni basse.
+I nove pallini delle due schede dei Secoli Bui non sono un errore: le
+generazioni basse concedono tratti oltre il 5, e un valore alto va potuto
+scrivere. Quelli che la generazione non concede si vedono sbarrati.
 
 Le due schede dei Secoli Bui sono **edizioni diverse dello stesso gioco** e
 si distinguono ovunque con il numero di edizione, sigle `SB20` e `SB1`.
