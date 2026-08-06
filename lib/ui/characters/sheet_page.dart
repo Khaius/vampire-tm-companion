@@ -8,6 +8,7 @@ import '../../data/generations.dart';
 import '../../data/schemas.dart';
 import '../../models/character.dart';
 import '../../models/sheet_type.dart';
+import '../widgets/character_photo.dart';
 import '../widgets/dots.dart';
 import '../widgets/parchment.dart';
 import '../widgets/prompts.dart';
@@ -43,6 +44,10 @@ class _SheetPageState extends State<SheetPage> {
   bool _locked = true;
 
   final ScrollController _scroll = ScrollController();
+
+  /// Cambia quando la foto cambia: serve a far rileggere il file, che ha
+  /// sempre lo stesso nome.
+  int _photoVersion = 0;
 
   @override
   void initState() {
@@ -343,7 +348,80 @@ class _SheetPageState extends State<SheetPage> {
     ];
   }
 
+  /// Sceglie o cambia il ritratto dalla memoria del telefono.
+  Future<void> _changePhoto(Character character) async {
+    final changed = await pickCharacterPhoto(_state, character);
+    if (changed && mounted) setState(() => _photoVersion++);
+  }
+
+  Future<void> _dropPhoto(Character character) async {
+    if (character.photoFile == null) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Togliere la foto?'),
+        content: const Text('La scheda resta, la foto viene cancellata.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Annulla'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: VtmColors.blood),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Togli'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await _state.removePhoto(character);
+    if (mounted) setState(() => _photoVersion++);
+  }
+
   Widget _identityBlock(Character character, bool wide) {
+    final grid = _identityFields(character, wide);
+    // il riquadro della foto compare se c'e' una foto, oppure se la scheda
+    // e' sbloccata: da bloccata non deve invitare a toccare niente
+    if (character.photoFile == null && _locked) return grid;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(right: 12, bottom: 6),
+          child: GestureDetector(
+            onTap: _locked ? null : () => _changePhoto(character),
+            onLongPress: _locked ? null : () => _dropPhoto(character),
+            child: Container(
+              width: 96,
+              height: 96,
+              decoration: BoxDecoration(
+                border: Border.all(color: VtmColors.ink, width: 1.2),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: CharacterPhoto(
+                state: _state,
+                character: character,
+                size: 96,
+                radius: 3,
+                version: _photoVersion,
+                placeholder: const Center(
+                  child: Icon(
+                    Icons.add_a_photo_outlined,
+                    color: VtmColors.ink,
+                    size: 26,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        Expanded(child: grid),
+      ],
+    );
+  }
+
+  Widget _identityFields(Character character, bool wide) {
     final fields = _schema.identity;
     return _Grid(
       columns: wide ? 3 : 1,

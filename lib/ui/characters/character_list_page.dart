@@ -1,17 +1,34 @@
+import 'dart:io';
+
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../core/app_state.dart';
 import '../../core/theme.dart';
+import '../../data/character_transfer.dart';
 import '../../models/character.dart';
 import '../../models/sheet_type.dart';
 import '../shell/nav_icons.dart';
+import '../widgets/character_photo.dart';
 import 'character_edit_page.dart';
 import 'sheet_page.dart';
 
 /// L'elenco delle schede salvate sul telefono.
-class CharacterListPage extends StatelessWidget {
+class CharacterListPage extends StatefulWidget {
   const CharacterListPage({super.key});
+
+  @override
+  State<CharacterListPage> createState() => _CharacterListPageState();
+}
+
+class _CharacterListPageState extends State<CharacterListPage> {
+  /// Fuori dalla modalita' esportazione e' null; dentro contiene gli id
+  /// spuntati, anche zero.
+  Set<String>? _picked;
+
+  bool get _picking => _picked != null;
 
   Future<void> _createNew(BuildContext context) async {
     final type = await Navigator.of(context).push<SheetType>(
@@ -39,28 +56,270 @@ class CharacterListPage extends StatelessWidget {
     Navigator.of(context).push(sheetPageRoute(character.id));
   }
 
+  void _say(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  /// Importa le schede da un file esportato.
+  Future<void> _import() async {
+    final file = await openFile(
+      acceptedTypeGroups: const [
+        XTypeGroup(
+          label: 'Schede VtM',
+          extensions: ['json'],
+          mimeTypes: ['application/json'],
+          uniformTypeIdentifiers: ['public.json'],
+        ),
+      ],
+    );
+    if (file == null) return;
+
+    final result = decodeTransfer(await file.readAsString());
+    if (!result.isOk) {
+      _say(result.error!);
+      return;
+    }
+    if (!mounted) return;
+    final added = await context.read<AppState>().importCharacters(
+      result.characters,
+    );
+    _say(
+      added.length == 1
+          ? 'Importata la scheda di ${added.single.displayName}.'
+          : 'Importate ${added.length} schede.',
+    );
+  }
+
+  /// Scrive il pacchetto e lo passa al pannello di condivisione.
+  Future<void> _export(List<Character> characters) async {
+    if (characters.isEmpty) return;
+    final state = context.read<AppState>();
+    File file;
+    try {
+      file = await state.exportCharacters(characters);
+    } catch (_) {
+      _say('Non è stato possibile preparare il file da esportare.');
+      return;
+    }
+    setState(() => _picked = null);
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(file.path, mimeType: 'application/json')],
+        subject: characters.length == 1
+            ? 'Scheda di ${characters.single.displayName}'
+            : 'Schede di VtM Companion',
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final characters = context.select<AppState, List<Character>>(
       (s) => s.characters,
     );
+    final picked = _picked;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('SCHEDE')),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _createNew(context),
-        tooltip: 'Nuova scheda',
-        child: const Icon(Icons.add, size: 30),
+      appBar: AppBar(
+        title: Text(_picking ? 'ESPORTA' : 'SCHEDE'),
+        leading: _picking
+            ? IconButton(
+                icon: const Icon(Icons.close),
+                tooltip: 'Annulla',
+                onPressed: () => setState(() => _picked = null),
+              )
+            : null,
+        actions: [
+          if (!_picking)
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert),
+              tooltip: 'Azioni sulle schede',
+              onSelected: (value) async {
+                switch (value) {
+                  case 'new':
+                    await _createNew(context);
+                  case 'import':
+                    await _import();
+                  case 'export':
+                    if (characters.isEmpty) {
+                      _say('Non c\'è ancora nessuna scheda da esportare.');
+                      return;
+                    }
+                    setState(() => _picked = <String>{});
+                }
+              },
+              itemBuilder: (context) => const [
+                PopupMenuItem(
+                  value: 'new',
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.add),
+                    title: Text('Nuova scheda'),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'import',
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.file_download_outlined),
+                    title: Text('Importa'),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'export',
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.ios_share),
+                    title: Text('Esporta'),
+                  ),
+                ),
+              ],
+            ),
+        ],
       ),
-      body: characters.isEmpty
-          ? const _EmptyState()
-          : ListView.separated(
-              padding: const EdgeInsets.fromLTRB(14, 10, 14, 96),
+      body: Stack(
+        children: [
+          if (characters.isEmpty)
+            const _EmptyState()
+          else
+            ListView.separated(
+              padding: EdgeInsets.fromLTRB(14, 10, 14, _picking ? 96 : 30),
               itemCount: characters.length,
               separatorBuilder: (_, _) => const SizedBox(height: 10),
-              itemBuilder: (context, index) =>
-                  _CharacterCard(character: characters[index]),
+              itemBuilder: (context, index) {
+                final character = characters[index];
+                return _CharacterCard(
+                  character: character,
+                  picked: picked?.contains(character.id),
+                  onPick: picked == null
+                      ? null
+                      : () => setState(() {
+                          if (!picked.remove(character.id)) {
+                            picked.add(character.id);
+                          }
+                        }),
+                );
+              },
             ),
+          if (picked != null)
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: _ExportBar(
+                selected: picked.length,
+                total: characters.length,
+                onSelectAll: () => setState(() {
+                  if (picked.length == characters.length) {
+                    picked.clear();
+                  } else {
+                    picked
+                      ..clear()
+                      ..addAll(characters.map((c) => c.id));
+                  }
+                }),
+                onExport: () => _export(
+                  characters.where((c) => picked.contains(c.id)).toList(),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// La barra che compare durante l'esportazione, sopra al menu in basso.
+class _ExportBar extends StatelessWidget {
+  const _ExportBar({
+    required this.selected,
+    required this.total,
+    required this.onSelectAll,
+    required this.onExport,
+  });
+
+  final int selected;
+  final int total;
+  final VoidCallback onSelectAll;
+  final VoidCallback onExport;
+
+  @override
+  Widget build(BuildContext context) {
+    final all = selected == total && total > 0;
+    return Material(
+      color: VtmColors.surfaceHigh,
+      elevation: 12,
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 60,
+          child: Row(
+            children: [
+              Expanded(
+                child: InkWell(
+                  onTap: onSelectAll,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        all ? Icons.check_box : Icons.check_box_outline_blank,
+                        color: VtmColors.gold,
+                      ),
+                      const SizedBox(width: 10),
+                      Flexible(
+                        child: Text(
+                          all ? 'Deseleziona tutto' : 'Seleziona tutto',
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontFamily: 'Cinzel',
+                            fontSize: 15,
+                            color: VtmColors.bone,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const VerticalDivider(width: 1, indent: 10, endIndent: 10),
+              Expanded(
+                child: InkWell(
+                  onTap: selected == 0 ? null : onExport,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.ios_share,
+                        color: selected == 0
+                            ? VtmColors.ash
+                            : VtmColors.bloodBright,
+                      ),
+                      const SizedBox(width: 10),
+                      Flexible(
+                        child: Text(
+                          selected == 0 ? 'Esporta' : 'Esporta ($selected)',
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: 'Cinzel',
+                            fontSize: 15,
+                            color: selected == 0
+                                ? VtmColors.ash
+                                : VtmColors.bone,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -84,8 +343,9 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             const Text(
-              'Tocca il "+" in basso a destra per creare la tua prima scheda '
-              'e scegliere fra le tre edizioni disponibili.',
+              'Apri il menu in alto a destra: da lì crei la tua prima scheda '
+              'scegliendo fra le tre edizioni, oppure importi una scheda che '
+              'ti hanno mandato.',
               textAlign: TextAlign.center,
               style: TextStyle(color: VtmColors.ash, height: 1.4),
             ),
@@ -97,9 +357,13 @@ class _EmptyState extends StatelessWidget {
 }
 
 class _CharacterCard extends StatelessWidget {
-  const _CharacterCard({required this.character});
+  const _CharacterCard({required this.character, this.picked, this.onPick});
 
   final Character character;
+
+  /// Null fuori dalla modalita' esportazione; dentro dice se e' spuntata.
+  final bool? picked;
+  final VoidCallback? onPick;
 
   Future<void> _confirmDelete(BuildContext context) async {
     final confirmed = await showDialog<bool>(
@@ -145,36 +409,24 @@ class _CharacterCard extends StatelessWidget {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () {
-          state.selectCharacter(character.id);
-          Navigator.of(context).push(sheetPageRoute(character.id));
-        },
+        onTap:
+            onPick ??
+            () {
+              state.selectCharacter(character.id);
+              Navigator.of(context).push(sheetPageRoute(character.id));
+            },
         child: Padding(
           padding: const EdgeInsets.fromLTRB(14, 12, 6, 12),
           child: Row(
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: character.type.accent.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: character.type.accent.withValues(alpha: 0.6),
-                  ),
+              if (picked != null) ...[
+                Icon(
+                  picked! ? Icons.check_box : Icons.check_box_outline_blank,
+                  color: picked! ? VtmColors.bloodBright : VtmColors.ash,
                 ),
-                child: Text(
-                  character.type == SheetType.darkAges
-                      ? 'SB'
-                      : character.type.shortLabel,
-                  style: const TextStyle(
-                    fontFamily: 'Cinzel',
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
-                  ),
-                ),
-              ),
+                const SizedBox(width: 12),
+              ],
+              _CharacterAvatar(character: character),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
@@ -205,33 +457,73 @@ class _CharacterCard extends StatelessWidget {
                   ],
                 ),
               ),
-              PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert),
-                onSelected: (value) async {
-                  switch (value) {
-                    case 'edit':
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              CharacterEditPage(characterId: character.id),
-                        ),
-                      );
-                    case 'duplicate':
-                      await state.duplicateCharacter(character);
-                    case 'delete':
-                      await _confirmDelete(context);
-                  }
-                },
-                itemBuilder: (context) => const [
-                  PopupMenuItem(value: 'edit', child: Text('Modifica dati')),
-                  PopupMenuItem(value: 'duplicate', child: Text('Duplica')),
-                  PopupMenuItem(value: 'delete', child: Text('Elimina')),
-                ],
-              ),
+              if (picked != null)
+                const SizedBox(width: 8)
+              else
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert),
+                  onSelected: (value) async {
+                    switch (value) {
+                      case 'edit':
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                CharacterEditPage(characterId: character.id),
+                          ),
+                        );
+                      case 'duplicate':
+                        await state.duplicateCharacter(character);
+                      case 'delete':
+                        await _confirmDelete(context);
+                    }
+                  },
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(value: 'edit', child: Text('Modifica dati')),
+                    PopupMenuItem(value: 'duplicate', child: Text('Duplica')),
+                    PopupMenuItem(value: 'delete', child: Text('Elimina')),
+                  ],
+                ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Il quadratino a sinistra della riga: la foto se c'e', altrimenti la
+/// sigla dell'edizione.
+class _CharacterAvatar extends StatelessWidget {
+  const _CharacterAvatar({required this.character});
+
+  final Character character;
+
+  @override
+  Widget build(BuildContext context) {
+    final badge = Container(
+      width: 44,
+      height: 44,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: character.type.accent.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: character.type.accent.withValues(alpha: 0.6)),
+      ),
+      child: Text(
+        character.type == SheetType.darkAges ? 'SB' : character.type.shortLabel,
+        style: const TextStyle(
+          fontFamily: 'Cinzel',
+          fontWeight: FontWeight.w700,
+          fontSize: 13,
+        ),
+      ),
+    );
+    if (character.photoFile == null) return badge;
+    return CharacterPhoto(
+      state: context.read<AppState>(),
+      character: character,
+      size: 44,
+      placeholder: badge,
     );
   }
 }

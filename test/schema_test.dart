@@ -83,20 +83,41 @@ void main() {
       expect(darkAges.hasTrack('umanita'), isFalse);
     });
 
-    test('le abilità V20 e Secoli Bui differiscono come sui PDF', () {
-      final v20 = schemaFor(
-        SheetType.v20,
-      ).abilities.expand((g) => g.traits).map((t) => t.label).toSet();
-      final darkAges = schemaFor(
-        SheetType.darkAges,
-      ).abilities.expand((g) => g.traits).map((t) => t.label).toSet();
+    test(
+      'i Secoli Bui tengono le proprie abilità e hanno anche le moderne',
+      () {
+        final v20 = schemaFor(
+          SheetType.v20,
+        ).abilities.expand((g) => g.traits).map((t) => t.label).toSet();
+        final darkAges = schemaFor(
+          SheetType.darkAges,
+        ).abilities.expand((g) => g.traits).map((t) => t.label).toSet();
 
-      expect(v20, contains('Armi da Fuoco'));
-      expect(v20, contains('Informatica'));
-      expect(darkAges, contains('Cavalcare'));
-      expect(darkAges, contains('Tiro con l\'Arco'));
-      expect(darkAges, contains('Teologia'));
-      expect(darkAges, isNot(contains('Armi da Fuoco')));
+        // le abilità d'epoca restano solo sulla scheda dei Secoli Bui
+        expect(darkAges, containsAll(<String>['Cavalcare', 'Teologia']));
+        expect(darkAges, contains('Tiro con l\'Arco'));
+        expect(v20, isNot(contains('Cavalcare')));
+
+        // ...e le moderne ci sono tutte, per le cronache che attraversano
+        // i secoli fino a oggi
+        expect(darkAges, containsAll(v20), reason: 'manca un\'abilità moderna');
+      },
+    );
+
+    test('le abilità in comune usano la stessa chiave nelle due schede', () {
+      Map<String, String> keysByLabel(SheetType type) => {
+        for (final trait in schemaFor(type).abilities.expand((g) => g.traits))
+          trait.label: trait.key,
+      };
+      final v20 = keysByLabel(SheetType.v20);
+      final darkAges = keysByLabel(SheetType.darkAges);
+      for (final entry in v20.entries) {
+        expect(
+          darkAges[entry.key],
+          entry.value,
+          reason: 'chiave diversa per ${entry.key}',
+        );
+      }
     });
 
     test('la scheda V5 usa Fame e Potenza del Sangue, non le Virtù', () {

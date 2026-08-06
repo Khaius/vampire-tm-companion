@@ -74,6 +74,11 @@ const darkAgesSchema = SheetSchema(
       TraitDef('ab.atletica', 'Atletica', specialtyKey: 'spec.ab.atletica'),
       TraitDef('ab.autorita', 'Autorità', specialtyKey: 'spec.ab.autorita'),
       TraitDef(
+        'ab.bassifondi',
+        'Bassifondi',
+        specialtyKey: 'spec.ab.bassifondi',
+      ),
+      TraitDef(
         'ab.consapevolezza',
         'Consapevolezza',
         specialtyKey: 'spec.ab.consapevolezza',
@@ -113,6 +118,11 @@ const darkAgesSchema = SheetSchema(
         specialtyKey: 'spec.ab.affinitaanimale',
       ),
       TraitDef(
+        'ab.armidafuoco',
+        'Armi da Fuoco',
+        specialtyKey: 'spec.ab.armidafuoco',
+      ),
+      TraitDef(
         'ab.armidamischia',
         'Armi da Mischia',
         specialtyKey: 'spec.ab.armidamischia',
@@ -120,12 +130,18 @@ const darkAgesSchema = SheetSchema(
       TraitDef('ab.cavalcare', 'Cavalcare', specialtyKey: 'spec.ab.cavalcare'),
       TraitDef('ab.commercio', 'Commercio', specialtyKey: 'spec.ab.commercio'),
       TraitDef(
+        'ab.criminalita',
+        'Criminalità',
+        specialtyKey: 'spec.ab.criminalita',
+      ),
+      TraitDef(
         'ab.espressioneartistica',
         'Espressione Artistica',
         specialtyKey: 'spec.ab.espressioneartistica',
       ),
       TraitDef('ab.furtivita', 'Furtività', specialtyKey: 'spec.ab.furtivita'),
       TraitDef('ab.galateo', 'Galateo', specialtyKey: 'spec.ab.galateo'),
+      TraitDef('ab.guidare', 'Guidare', specialtyKey: 'spec.ab.guidare'),
       TraitDef('ab.manualita', 'Manualità', specialtyKey: 'spec.ab.manualita'),
       TraitDef(
         'ab.sopravvivenza',
@@ -145,10 +161,16 @@ const darkAgesSchema = SheetSchema(
         specialtyKey: 'spec.ab.accademiche',
       ),
       TraitDef('ab.enigmi', 'Enigmi', specialtyKey: 'spec.ab.enigmi'),
+      TraitDef('ab.finanza', 'Finanza', specialtyKey: 'spec.ab.finanza'),
       TraitDef(
         'ab.governodomestico',
         'Governo Domestico',
         specialtyKey: 'spec.ab.governodomestico',
+      ),
+      TraitDef(
+        'ab.informatica',
+        'Informatica',
+        specialtyKey: 'spec.ab.informatica',
       ),
       TraitDef(
         'ab.investigare',
@@ -163,6 +185,12 @@ const darkAgesSchema = SheetSchema(
         'ab.saggezzapopolare',
         'Saggezza Popolare',
         specialtyKey: 'spec.ab.saggezzapopolare',
+      ),
+      TraitDef('ab.scienze', 'Scienze', specialtyKey: 'spec.ab.scienze'),
+      TraitDef(
+        'ab.tecnologia',
+        'Tecnologia',
+        specialtyKey: 'spec.ab.tecnologia',
       ),
       TraitDef('ab.teologia', 'Teologia', specialtyKey: 'spec.ab.teologia'),
     ], extraSlots: 1),

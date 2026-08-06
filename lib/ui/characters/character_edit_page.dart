@@ -7,6 +7,7 @@ import '../../data/clans.dart';
 import '../../data/generations.dart';
 import '../../data/schemas.dart';
 import '../../models/character.dart';
+import '../widgets/character_photo.dart';
 import '../widgets/dots.dart';
 import '../widgets/prompts.dart';
 import '../widgets/tracks.dart';
@@ -243,6 +244,11 @@ class _CharacterEditPageState extends State<CharacterEditPage> {
               'identita',
               'Identità',
               children: [
+                PhotoField(
+                  state: _state,
+                  character: character,
+                  onChanged: () => setState(() {}),
+                ),
                 for (final field in _schema.identity)
                   _TextRow(
                     key: ValueKey('id_${field.key}_$_prefillEpoch'),

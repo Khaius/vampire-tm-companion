@@ -151,11 +151,54 @@ void main() {
 
   testWidgets('scelta del tipo di scheda', (tester) async {
     await boot(tester);
-    await tester.tap(find.byIcon(Icons.add));
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AppBar),
+        matching: find.byIcon(Icons.more_vert),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Nuova scheda'));
     await tester.pumpAndSettle();
     await expectLater(
       find.byType(MaterialApp),
       matchesGoldenFile('goldens/02_nuova_scheda.png'),
+    );
+  });
+
+  testWidgets('il menu delle azioni della lista', (tester) async {
+    seedV20();
+    await boot(tester);
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AppBar),
+        matching: find.byIcon(Icons.more_vert),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('goldens/15_menu_azioni.png'),
+    );
+  });
+
+  testWidgets('selezione delle schede da esportare', (tester) async {
+    seedV20();
+    await boot(tester);
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AppBar),
+        matching: find.byIcon(Icons.more_vert),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Esporta'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Seleziona tutto'));
+    await tester.pumpAndSettle();
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('goldens/16_esporta_selezione.png'),
     );
   });
 

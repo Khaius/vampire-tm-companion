@@ -114,7 +114,10 @@ void main() {
   ) async {
     await boot(tester);
 
-    await tester.tap(find.byIcon(Icons.add));
+    // la creazione vive nel menu a tre pallini in alto a destra
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Nuova scheda'));
     await tester.pumpAndSettle();
     expect(find.text('NUOVA SCHEDA'), findsOneWidget);
     // tutte e tre le edizioni sono proposte
