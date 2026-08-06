@@ -63,14 +63,16 @@ void main() {
   group('Lo stesso clan cambia da un\'edizione all\'altra', () {
     test('i Gangrel usano il nome della Disciplina della loro scheda', () {
       // la 5a edizione italiana dice "Proteide", la 20a "Protean"
-      expect(
-        clanRule(SheetType.v5, 'Gangrel')!.disciplines,
-        ['Animalità', 'Robustezza', 'Proteide'],
-      );
-      expect(
-        clanRule(SheetType.v20, 'Gangrel')!.disciplines,
-        ['Animalismo', 'Robustezza', 'Protean'],
-      );
+      expect(clanRule(SheetType.v5, 'Gangrel')!.disciplines, [
+        'Animalità',
+        'Robustezza',
+        'Proteide',
+      ]);
+      expect(clanRule(SheetType.v20, 'Gangrel')!.disciplines, [
+        'Animalismo',
+        'Robustezza',
+        'Protean',
+      ]);
     });
 
     test('i Tremere hanno debolezze diverse nelle tre edizioni', () {

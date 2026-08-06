@@ -77,8 +77,13 @@ Disciplina — qui trovi Ogham. Come tutto il resto, si corregge a mano.
 Scelta la generazione, i pallini che il personaggio non può raggiungere
 vengono disegnati sbarrati e non rispondono al tocco. Vale per Attributi,
 Abilità, Discipline, Background, Vie e Altre Caratteristiche; **non** per
-Umanità/Sentiero e Volontà, che restano fuori dal limite. Anche la riserva
-di Punti Sangue si spegne oltre il massimo consentito.
+Umanità/Sentiero e Volontà, che restano fuori dal limite.
+
+I **Punti Sangue** invece non vengono nemmeno disegnati: un personaggio di
+tredicesima vede dieci caselle, non venti di cui dieci spente. La scheda dei
+Secoli Bui ne stampa cinquanta, ma di settima generazione se ne vedono venti.
+La scheda della 5ª edizione non ha punti sangue: al loro posto ci sono Fame e
+Potenza del Sangue, che dalla generazione non dipendono.
 
 | Generazione | Max tratti | Sangue | Per turno |
 |---|---|---|---|
@@ -102,7 +107,10 @@ dei Secoli Bui, che ne stampa nove.
 
 Se una scheda ha già un valore oltre il limite (per esempio cambiando
 generazione a personaggio fatto), quel pallino resta pieno ma smorzato: il
-dato non viene cancellato di nascosto, viene segnalato.
+dato non viene cancellato di nascosto, viene segnalato. Lo stesso vale per il
+sangue, dove le caselle sparite non si possono smorzare: se oltre il limite
+c'era qualcosa di segnato compare una riga che lo dice, e riportando la
+generazione indietro le caselle tornano com'erano.
 
 ## Come si usa
 
@@ -113,6 +121,20 @@ disegnata come l'originale cartaceo — ed è viva: i pallini, le caselle di
 salute, volontà e sangue si toccano e cambiano subito, le righe si toccano
 per scrivere. Toccando il **nome di un tratto** si passa ai dadi con la
 riserva già impostata su quel valore.
+
+Ogni sezione si **apre e si chiude** toccandone il titolo, sulla scheda come
+nel modulo di modifica: chi non usa i Rituali se li toglie di mezzo una volta
+sola, perché la scelta viene salvata insieme al personaggio e vale in
+entrambe le viste. Di fianco c'è la barra di scorrimento, per arrivare in
+fondo a una scheda lunga senza venti passate di pollice.
+
+Le sezioni a elenco — Discipline, Pregi, Difetti, Rituali, Vie... — partono
+**vuote**: si aggiunge una riga con "aggiungi voce" quando serve, invece di
+trovarne sette in bianco da saltare con gli occhi. Sulla scheda disegnata la
+riga per aggiungere compare solo da sbloccata, e il nome viene chiesto
+subito: una riga senza nome sarebbe di nuovo una riga vuota. Le schede fatte
+con le versioni precedenti perdono le righe rimaste in bianco la prima volta
+che si aprono in modifica.
 
 La scheda si apre **bloccata**: si può sfogliare senza il rischio di
 cambiarla per sbaglio mentre si scorre. Il lucchetto in alto (o la banda
@@ -235,7 +257,8 @@ gli archetipi di Natura e Carattere.
 
 I dati vivono in un file JSON per personaggio nella cartella privata
 dell'app, scritti con un piccolo ritardo mentre si tocca la scheda per non
-scrivere su disco a ogni pallino.
+scrivere su disco a ogni pallino. Nello stesso file finiscono anche le
+sezioni chiuse: sono una scelta che riguarda quel personaggio, non l'app.
 
 ## Test
 

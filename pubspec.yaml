@@ -1,7 +1,7 @@
 name: vtm_companion
 description: "Compagno da tavolo per Vampire: The Masquerade - schede, dadi e documenti, tutto in locale."
 publish_to: 'none'
-version: 1.2.0+3
+version: 1.3.0+4
 
 environment:
   sdk: ^3.9.0
