@@ -14,6 +14,10 @@ on:
         description: "Tag della release definitiva (es. v1.0.0). Vuoto = solo build."
         required: false
         default: ""
+      highlights:
+        description: "Novità di questa versione, in cima alle note. Vuoto = solo il testo fisso."
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -74,6 +78,21 @@ jobs:
              dist/vtm-companion-arm32.apk
           ls -la dist
 
+      # Il testo fisso sta in .github/release-notes.md, dove si legge e si
+      # corregge senza combattere con l'indentazione dello YAML. Sopra ci
+      # finiscono le novita' della versione, se l'avvio manuale le indica.
+      - name: Prepara le note della release
+        env:
+          HIGHLIGHTS: ${{ inputs.highlights }}
+        run: |
+          {
+            if [ -n "$HIGHLIGHTS" ]; then
+              printf '## Novità di questa versione\n\n%s\n\n' "$HIGHLIGHTS"
+            fi
+            cat .github/release-notes.md
+          } > note-release.md
+          cat note-release.md
+
       - name: Pubblica l'APK come artifact
         uses: actions/upload-artifact@v4
         with:
@@ -102,9 +121,14 @@ jobs:
             - `vtm-companion-arm32.apk` — telefoni piu' vecchi a 32 bit.
             - `vtm-companion.apk` — universale, va su tutto ma pesa il triplo.
 
-            Serve autorizzare l'installazione da origini sconosciute. Se sul
-            telefono c'e' gia' una versione installata da prima del
-            5 agosto 2026, disinstallala: era firmata con un'altra chiave.
+            Serve autorizzare l'installazione da origini sconosciute.
+
+            Se aggiorni, riscarica lo **stesso file** che avevi installato:
+            i tre APK hanno serie di numeri di build diverse, e passare
+            dall'arm64 all'universale per Android e' un ritorno indietro,
+            quindi lo rifiuta. Se sul telefono c'e' ancora una versione
+            anteriore al 5 agosto 2026, disinstallala: era firmata con
+            un'altra chiave.
           prerelease: true
           files: dist/*.apk
 
@@ -119,34 +143,4 @@ jobs:
           make_latest: true
           files: dist/*.apk
           generate_release_notes: true
-          body: |
-            Compagno da tavolo per **Vampire: The Masquerade**: schede
-            personaggio delle tre edizioni, tiro dei d10 e libreria di PDF.
-            Funziona tutto in locale sul telefono: niente account, niente
-            rete, i dati restano sul dispositivo.
-
-            ## Quale file scaricare
-
-            | File | Per chi |
-            |---|---|
-            | `vtm-companion-arm64.apk` | Praticamente tutti i telefoni degli ultimi anni. **Parti da questo.** |
-            | `vtm-companion-arm32.apk` | Telefoni più vecchi a 32 bit. |
-            | `vtm-companion.apk` | Universale: va su tutto, ma pesa il triplo. |
-
-            ## Come si installa
-
-            L'app non passa dal Play Store, quindi Android chiede una
-            conferma in più:
-
-            1. Apri l'APK scaricato.
-            2. Se dice che l'installazione non è consentita, il permesso va
-               dato **all'app da cui apri il file** (Chrome, Gestione file...):
-               Impostazioni → App → Accesso speciale alle app →
-               Installa app sconosciute.
-            3. Su Android 16, se viene rifiutata senza spiegazioni, controlla
-               che non sia attiva la *Protezione avanzata* in
-               Impostazioni → Sicurezza e privacy.
-
-            Se avevi installato una build di prova precedente al
-            5 agosto 2026, disinstallala prima: era firmata con un'altra
-            chiave e Android non la lascia sovrascrivere.
+          body_path: note-release.md
